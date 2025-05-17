@@ -1,0 +1,151 @@
+#include <iostream>
+#include <vector>
+#include <deque>
+#include <chrono>
+#include <iomanip>
+#include <thread>
+#include <mutex>
+#include <map>
+#include <fstream>
+#include "drh.h"
+#include "compare.h"
+#include "emodnet_extractor.h"
+
+// Struct to store results per sensor
+struct SensorStats {
+    size_t streamSize;
+    int windowSize;
+    double totalCR;
+    double totalEncodeThroughputMBs;
+    double totalDecodeThroughputMBs;
+    double totalEncodeTimeMs;
+    double totalDecodeTimeMs;
+    bool valid;
+};
+
+// Thread-safe result map
+std::map<std::string, SensorStats> results;
+std::mutex resultsMutex;
+
+void compress_stream(const std::string& sensorName, const std::vector<double>& stream, int windowSize) {
+    DRH drh; // No digitsAfterComma needed!
+
+    std::deque<double> window;
+    std::vector<double> allDecoded;
+    bool firstWindow = true;
+
+    double totalEncodeTimeMs = 0.0;
+    double totalDecodeTimeMs = 0.0;
+    size_t totalInputBytes = 0;
+    size_t totalOutputBytes = 0;
+
+    for (size_t i = 0; i < stream.size(); ++i) {
+        window.push_back(stream[i]);
+        if (window.size() > windowSize)
+            window.pop_front();
+
+        if (window.size() == windowSize) {
+            std::vector<double> currentWindow(window.begin(), window.end());
+
+            auto startEncode = std::chrono::high_resolution_clock::now();
+            auto encoded = drh.encode(currentWindow);
+            auto endEncode = std::chrono::high_resolution_clock::now();
+
+            auto startDecode = std::chrono::high_resolution_clock::now();
+            auto decoded = drh.decode(encoded);
+            auto endDecode = std::chrono::high_resolution_clock::now();
+
+            double encodeTimeMs = std::chrono::duration<double, std::milli>(endEncode - startEncode).count();
+            double decodeTimeMs = std::chrono::duration<double, std::milli>(endDecode - startDecode).count();
+
+            if (firstWindow) {
+                allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
+                firstWindow = false;
+            } else {
+                allDecoded.push_back(decoded.back());
+            }
+
+            size_t inputBytes = currentWindow.size() * sizeof(double);
+            size_t outputBytes = 0;
+            for (const auto& s : encoded) outputBytes += s.size();
+
+            totalEncodeTimeMs += encodeTimeMs;
+            totalDecodeTimeMs += decodeTimeMs;
+            totalInputBytes += inputBytes;
+            totalOutputBytes += outputBytes;
+        }
+    }
+
+    double totalCR = totalOutputBytes == 0 ? 0 : static_cast<double>(totalInputBytes) / totalOutputBytes;
+    double totalEncodeThroughputMBs = (totalEncodeTimeMs == 0) ? 0 : (totalInputBytes / (1024.0 * 1024.0)) / (totalEncodeTimeMs / 1000.0);
+    double totalDecodeThroughputMBs = (totalDecodeTimeMs == 0) ? 0 : (totalOutputBytes / (1024.0 * 1024.0)) / (totalDecodeTimeMs / 1000.0);
+
+    // STRICT equality: bit-exact decompression!
+    bool valid = compareVectors(stream, allDecoded);
+
+    std::cout << "Sensor: " << sensorName << ", original size: " << stream.size()
+              << ", decoded size: " << allDecoded.size() << std::endl;
+    for (size_t i = 0; i < std::min(stream.size(), allDecoded.size()); ++i) {
+        if (stream[i] != allDecoded[i])
+            std::cout << "Mismatch at " << i << ": orig=" << stream[i] << ", dec=" << allDecoded[i] << std::endl;
+    }
+
+    // Store results in thread-safe map
+    SensorStats stats = {
+            stream.size(),
+            windowSize,
+            totalCR,
+            totalEncodeThroughputMBs,
+            totalDecodeThroughputMBs,
+            totalEncodeTimeMs,
+            totalDecodeTimeMs,
+            valid
+    };
+    std::lock_guard<std::mutex> lock(resultsMutex);
+    results[sensorName] = stats;
+}
+
+int main() {
+    std::string filename = "C:/Users/arthu/CLionProjects/Thesis/Simplified_dataset2.txt";
+    std::cout << "Processing file: " << filename << "\n";
+    // Windowsize for dataset 1 (108) -> 12
+    // Windowsize dor dataset 2 (1625) -> 13
+    int windowSize = 25;
+
+    // Extract all sensor streams
+    auto sensorStreams = EMODnetExtractor::extractSensorsData(filename);
+
+    std::vector<std::thread> threads;
+    std::cout << "Extracted " << sensorStreams.size() << " sensor streams.\n";
+    for (const auto& [sensorName, stream] : sensorStreams) {
+        if (stream.size() < windowSize) continue;
+        threads.emplace_back(compress_stream, sensorName, stream, windowSize);
+    }
+    for (auto& t : threads) t.join();
+
+    std::cout << "\nAll sensors processed.\n";
+
+    // Write results to CSV
+    std::ofstream csv("C:/Users/arthu/CLionProjects/Thesis/compression_results.csv");
+
+// Write window size as a header line
+    csv << "# WindowSize," << windowSize << "\n";
+
+// Write column headers
+    csv << "Sensor,Stream Size,Window Size,CR,Compression Throughput (MB/s),Decompression Throughput (MB/s),Compression Time (ms),Decompression Time (ms),Valid\n";
+
+    for (const auto& [sensor, stats] : results) {
+        csv << "\"" << sensor << "\","
+            << stats.streamSize << ","
+            << stats.windowSize << ","
+            << std::fixed << std::setprecision(2) << stats.totalCR << ","
+            << stats.totalEncodeThroughputMBs << ","
+            << stats.totalDecodeThroughputMBs << ","
+            << stats.totalEncodeTimeMs << ","
+            << stats.totalDecodeTimeMs << ","
+            << (stats.valid ? "true" : "false") << "\n";
+    }
+    csv.close();
+    std::cout << "Results written to compression_results.csv\n";
+    return 0;
+}

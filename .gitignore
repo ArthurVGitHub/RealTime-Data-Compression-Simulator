@@ -1,0 +1,40 @@
+# Build folders
+cmake-build-*/
+build/
+*.user
+*.pro.user
+
+# Qt Creator
+*.autosave
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+*.moc
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.a
+*.lib
+*.app
+*.pch
+*.sdf
+*.ipch
+*.db
+*.tlog
+*.lastbuildstate
+
+# CLion
+.idea/
+*.iml

@@ -1,0 +1,215 @@
+#include "drh.h"
+#include <cmath>
+#include <sstream>
+#include <queue>
+#include <set>
+#include <iostream>
+#include <functional>
+
+// ========== DELTA ENCODING ==========
+
+std::vector<int> DRH::deltaEncode(const std::vector<double>& data) const {
+    std::vector<int> deltas;
+    int scale = static_cast<int>(std::pow(10, digitsAfterComma));
+    int prev = static_cast<int>(std::round(data[0] * scale));
+    deltas.push_back(prev);
+    for (size_t i = 1; i < data.size(); ++i) {
+        int curr = static_cast<int>(std::round(data[i] * scale));
+        deltas.push_back(curr - prev);
+        prev = curr;
+    }
+    return deltas;
+}
+
+std::vector<double> DRH::deltaDecode(const std::vector<int>& deltas) const {
+    std::vector<double> data;
+    int scale = static_cast<int>(std::pow(10, digitsAfterComma));
+    int curr = deltas[0];
+    data.push_back(curr / static_cast<double>(scale));
+    for (size_t i = 1; i < deltas.size(); ++i) {
+        curr += deltas[i];
+        data.push_back(curr / static_cast<double>(scale));
+    }
+    return data;
+}
+
+// ========== RLE ENCODING ==========
+
+std::vector<std::pair<int, int>> DRH::rleEncode(const std::vector<int>& deltas) const {
+    std::vector<std::pair<int, int>> rle;
+    int prev = deltas[0];
+    int count = 1;
+    for (size_t i = 1; i < deltas.size(); ++i) {
+        if (deltas[i] == prev) {
+            ++count;
+        } else {
+            rle.emplace_back(prev, count);
+            prev = deltas[i];
+            count = 1;
+        }
+    }
+    rle.emplace_back(prev, count);
+    return rle;
+}
+
+std::vector<int> DRH::rleDecode(const std::vector<std::pair<int, int>>& rleData) const {
+    std::vector<int> deltas;
+    for (const auto& p : rleData) {
+        for (int i = 0; i < p.second; ++i) {
+            deltas.push_back(p.first);
+        }
+    }
+    return deltas;
+}
+
+// ========== HUFFMAN ENCODING ==========
+
+struct HuffmanNode {
+    int value;
+    int freq;
+    HuffmanNode* left;
+    HuffmanNode* right;
+    HuffmanNode(int v, int f) : value(v), freq(f), left(nullptr), right(nullptr) {}
+    HuffmanNode(HuffmanNode* l, HuffmanNode* r) : value(0), freq(l->freq + r->freq), left(l), right(r) {}
+    ~HuffmanNode() { delete left; delete right; }
+};
+
+struct CompareNode {
+    bool operator()(HuffmanNode* a, HuffmanNode* b) { return a->freq > b->freq; }
+};
+
+void DRH::buildHuffmanTree(const std::vector<std::pair<int, int>>& rleData) {
+    // Count frequencies of values
+    std::map<int, int> freq;
+    for (const auto& p : rleData) {
+        freq[p.first] += p.second;
+    }
+
+    // Build priority queue
+    std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, CompareNode> pq;
+    for (const auto& f : freq) {
+        pq.push(new HuffmanNode(f.first, f.second));
+    }
+
+    // Build tree
+    while (pq.size() > 1) {
+        HuffmanNode* left = pq.top(); pq.pop();
+        HuffmanNode* right = pq.top(); pq.pop();
+        pq.push(new HuffmanNode(left, right));
+    }
+    HuffmanNode* root = pq.top();
+
+    // Build code map
+    valueToHuffmanCode.clear();
+    huffmanCodeToValue.clear();
+    std::function<void(HuffmanNode*, std::string)> build = [&](HuffmanNode* node, std::string code) {
+        if (!node->left && !node->right) {
+            valueToHuffmanCode[node->value] = code.empty() ? "0" : code;
+            huffmanCodeToValue[code.empty() ? "0" : code] = node->value;
+            return;
+        }
+        if (node->left) build(node->left, code + "0");
+        if (node->right) build(node->right, code + "1");
+    };
+    build(root, "");
+    delete root;
+}
+
+std::string DRH::huffmanEncode(const std::vector<std::pair<int, int>>& rleData) const {
+    std::string bitstring;
+    for (const auto& p : rleData) {
+        std::string code = valueToHuffmanCode.at(p.first);
+        for (int i = 0; i < p.second; ++i) {
+            bitstring += code;
+        }
+    }
+    return bitstring;
+}
+
+std::vector<std::pair<int, int>> DRH::huffmanDecode(const std::string& bitstring) const {
+    std::vector<std::pair<int, int>> rleData;
+    size_t i = 0;
+    while (i < bitstring.size()) {
+        std::string code;
+        size_t j = i;
+        while (j < bitstring.size()) {
+            code += bitstring[j];
+            if (huffmanCodeToValue.count(code)) {
+                rleData.emplace_back(huffmanCodeToValue.at(code), 1);
+                i = j + 1;
+                break;
+            }
+            ++j;
+        }
+        if (j == bitstring.size()) break; // No match, should not happen
+    }
+    // Combine consecutive same values into RLE
+    std::vector<std::pair<int, int>> rleCombined;
+    if (!rleData.empty()) {
+        int prev = rleData[0].first;
+        int count = 1;
+        for (size_t k = 1; k < rleData.size(); ++k) {
+            if (rleData[k].first == prev) {
+                ++count;
+            } else {
+                rleCombined.emplace_back(prev, count);
+                prev = rleData[k].first;
+                count = 1;
+            }
+        }
+        rleCombined.emplace_back(prev, count);
+    }
+    return rleCombined;
+}
+
+// ========== UTILITY ==========
+
+std::string DRH::intToBitString(int value, int length) const {
+    std::string s;
+    for (int i = length - 1; i >= 0; --i) {
+        s += ((value >> i) & 1) ? '1' : '0';
+    }
+    return s;
+}
+
+int DRH::bitStringToInt(const std::string& bits) const {
+    int value = 0;
+    for (char c : bits) {
+        value = (value << 1) | (c == '1' ? 1 : 0);
+    }
+    return value;
+}
+
+// ========== ENCODE ==========
+
+DRH::DRH(int digitsAfterComma) : digitsAfterComma(digitsAfterComma) {}
+
+std::vector<std::string> DRH::encode(const std::vector<double>& data) {
+    // 1. Delta encoding
+    auto deltas = deltaEncode(data);
+
+    // 2. RLE encoding
+    auto rle = rleEncode(deltas);
+
+    // 3. Huffman encoding
+    buildHuffmanTree(rle);
+    std::string bitstring = huffmanEncode(rle);
+
+    // Return as vector<string> (you could also just return {bitstring})
+    return {bitstring};
+}
+
+// ========== DECODE ==========
+
+std::vector<double> DRH::decode(const std::vector<std::string>& encodedValues) {
+    if (encodedValues.empty()) return {};
+
+    // 1. Huffman decoding
+    auto rle = huffmanDecode(encodedValues[0]);
+
+    // 2. RLE decoding
+    auto deltas = rleDecode(rle);
+
+    // 3. Delta decoding
+    return deltaDecode(deltas);
+}

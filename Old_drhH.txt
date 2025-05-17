@@ -1,0 +1,39 @@
+#ifndef DRH_H
+#define DRH_H
+
+#include "compressor_interface.h"
+#include <vector>
+#include <string>
+#include <map>
+
+class DRH : public CompressorInterface {
+public:
+    DRH(int digitsAfterComma);
+
+    std::vector<std::string> encode(const std::vector<double>& data) override;
+    std::vector<double> decode(const std::vector<std::string>& encodedValues) override;
+
+private:
+    int digitsAfterComma;
+
+    // Delta helpers
+    std::vector<int> deltaEncode(const std::vector<double>& data) const;
+    std::vector<double> deltaDecode(const std::vector<int>& deltas) const;
+
+    // RLE helpers
+    std::vector<std::pair<int, int>> rleEncode(const std::vector<int>& deltas) const;
+    std::vector<int> rleDecode(const std::vector<std::pair<int, int>>& rleData) const;
+
+    // Huffman helpers
+    std::map<std::string, int> huffmanCodeToValue;
+    std::map<int, std::string> valueToHuffmanCode;
+    void buildHuffmanTree(const std::vector<std::pair<int, int>>& rleData);
+    std::string huffmanEncode(const std::vector<std::pair<int, int>>& rleData) const;
+    std::vector<std::pair<int, int>> huffmanDecode(const std::string& bitstring) const;
+
+    // Utility
+    std::string intToBitString(int value, int length) const;
+    int bitStringToInt(const std::string& bits) const;
+};
+
+#endif // DRH_H
