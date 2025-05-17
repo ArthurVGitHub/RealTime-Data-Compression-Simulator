@@ -16,8 +16,10 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_saveCsvButton_clicked();
     void on_runButton_clicked();
     void onAlgorithmChanged(const QString &text);
+    void on_visualizeButton_clicked();
 
 private:
     Ui::MainWindow *ui;

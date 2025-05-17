@@ -30,6 +30,8 @@ add_executable(Thesis
         CompressorRunner.h
         delta.cpp
         delta.h
+        ResultsTableDialog.cpp
+        ResultsTableDialog.h
 )
 
 # Link against Qt6 Widgets
