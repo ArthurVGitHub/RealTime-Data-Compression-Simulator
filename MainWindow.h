@@ -23,6 +23,7 @@ private slots:
     void on_visualizeButton_clicked();
 
 private:
+    int initialWindowSize = 20;
     std::unique_ptr<Ui::MainWindow> ui;   // <<-- keep this private!
     QString currentAlgorithm;
     CompressorRunner runner;

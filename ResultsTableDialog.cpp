@@ -16,7 +16,7 @@ ResultsTableDialog::ResultsTableDialog(const QString& csvData, int windowSize, Q
     QVBoxLayout *layout = new QVBoxLayout(this);
 
     // Add window size label
-    QLabel *windowLabel = new QLabel(QString("Window Size: %1").arg(windowSize), this);
+    QLabel *windowLabel = new QLabel(QString("Initial Window Size: %1").arg(windowSize), this);
     layout->addWidget(windowLabel);
 
     // Setup table
@@ -30,26 +30,33 @@ void ResultsTableDialog::setupTable(const QString& csvData, int windowSize) {
 
     // Headers
     QStringList headers = lines[0].split(",");
+    int winSizeCol = headers.indexOf("Window Size");
+    if (winSizeCol != -1)
+        headers.removeAt(winSizeCol);
     table->setColumnCount(headers.size());
     table->setHorizontalHeaderLabels(headers);
 
     // Data rows
     table->setRowCount(lines.size() - 1);
 
-    int invalidCount = 0; // <-- Add this
+    int invalidCount = 0;
 
     for (int i = 1; i < lines.size(); ++i) {
         QStringList fields = lines[i].split(",");
+        if (winSizeCol != -1 && winSizeCol < fields.size())
+            fields.removeAt(winSizeCol);
+
         for (int j = 0; j < fields.size(); ++j) {
             QTableWidgetItem *item = new QTableWidgetItem(fields[j]);
             table->setItem(i-1, j, item);
         }
         // Validation highlighting and counting
-        QTableWidgetItem *validItem = table->item(i-1, 7); // "Valid" column
+        // "Valid" column is now at (fields.size() - 1)
+        QTableWidgetItem *validItem = table->item(i-1, fields.size() - 1);
         if (validItem && validItem->text().toLower() != "true") {
             validItem->setBackground(Qt::red);
             validItem->setForeground(Qt::white);
-            ++invalidCount; // <-- Count invalid
+            ++invalidCount;
         }
     }
 
@@ -62,7 +69,6 @@ void ResultsTableDialog::setupTable(const QString& csvData, int windowSize) {
     QLabel *statsLabel = new QLabel(QString("Total Sensors: %1 | Invalid: %2")
                                             .arg(table->rowCount())
                                             .arg(invalidCount), this);
-    // Insert below window size label (which is at index 0)
     QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(this->layout());
     if (layout) layout->insertWidget(1, statsLabel);
 }

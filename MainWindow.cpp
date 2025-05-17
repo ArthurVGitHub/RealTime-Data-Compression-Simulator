@@ -35,10 +35,9 @@ void MainWindow::onAlgorithmChanged(const QString &text) {
 
 void MainWindow::on_runButton_clicked() {
     QString filename = ui->fileLineEdit->text();
-    int windowSize = 10;
 
     runner.setAlgorithm(currentAlgorithm.toStdString());
-    runner.runCompression(filename.toStdString(), windowSize);
+    runner.runCompression(filename.toStdString(), initialWindowSize);
 
     QString summary = QString::fromStdString(runner.getSummaryText());
     ui->resultsTextEdit->setText(summary);
@@ -77,9 +76,8 @@ void MainWindow::on_visualizeButton_clicked() {
     }
 
     QString csvData = QString::fromStdString(runner.getSummaryText());
-    int windowSize = 10; // Or get from UI
 
-    ResultsTableDialog dialog(csvData, windowSize, this);
+    ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
     // No need to 'delete' if you use stack allocation
 }
