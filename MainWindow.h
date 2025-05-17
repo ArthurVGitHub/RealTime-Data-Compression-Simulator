@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <memory>
 #include "CompressorRunner.h"
 
 QT_BEGIN_NAMESPACE
@@ -9,7 +10,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow {
-    Q_OBJECT
+Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -22,10 +23,9 @@ private slots:
     void on_visualizeButton_clicked();
 
 private:
-    Ui::MainWindow *ui;
+    std::unique_ptr<Ui::MainWindow> ui;   // <<-- keep this private!
     QString currentAlgorithm;
     CompressorRunner runner;
 };
 
 #endif // MAINWINDOW_H
-

@@ -1,13 +1,16 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include "CompressorRunner.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFile>
 #include <QTextStream>
 #include "ResultsTableDialog.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), currentAlgorithm("DRH") {
+MainWindow::MainWindow(QWidget *parent)
+        : QMainWindow(parent),
+          ui(std::make_unique<Ui::MainWindow>()),   // <<-- correct initialization
+          currentAlgorithm("DRH")
+{
     ui->setupUi(this);
 
     // Populate combo box
@@ -23,9 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->visualizeButton, &QPushButton::clicked, this, &MainWindow::on_visualizeButton_clicked);
 }
 
-MainWindow::~MainWindow() {
-    delete ui;
-}
+MainWindow::~MainWindow() = default; // unique_ptr auto-deletes ui
 
 void MainWindow::onAlgorithmChanged(const QString &text) {
     runner.setAlgorithm(text.toStdString());
