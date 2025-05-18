@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     // Populate combo box
-    ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them
+    //ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them
 
     // Connect combo box change
     connect(ui->algorithmComboBox, &QComboBox::currentTextChanged,
