@@ -10,7 +10,7 @@
 #include "compressor_interface.h"
 class Delta : public CompressorInterface{
 public:
-    Delta();
+    Delta() = default;
 
     // Encode and decode interface
     std::vector<std::string> encode(const std::vector<double>& data);

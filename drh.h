@@ -7,7 +7,7 @@
 
 class DRH : public CompressorInterface{
 public:
-    DRH(); // No need for digitsAfterComma anymore
+    DRH() = default;
 
     std::vector<std::string> encode(const std::vector<double>& data);
     std::vector<double> decode(const std::vector<std::string>& encodedValues);

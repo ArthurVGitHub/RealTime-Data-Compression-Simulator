@@ -5,8 +5,6 @@
 #include "delta.h"
 #include <cstring>
 
-Delta::Delta() {}
-
 uint64_t Delta::doubleToUint64(double d) const {
     uint64_t u;
     std::memcpy(&u, &d, sizeof(double));

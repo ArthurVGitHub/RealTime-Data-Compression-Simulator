@@ -173,7 +173,6 @@ std::vector<std::pair<int64_t, int>> DRH::huffmanDecode(const std::string& bitst
 }
 
 // ======= ENCODE/DECODE =======
-DRH::DRH() {}
 
 std::vector<std::string> DRH::encode(const std::vector<double>& data) {
     if (data.empty()) return {};
