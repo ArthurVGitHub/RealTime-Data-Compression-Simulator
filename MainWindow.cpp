@@ -35,12 +35,14 @@ void MainWindow::onAlgorithmChanged(const QString &text) {
 
 void MainWindow::on_runButton_clicked() {
     QString filename = ui->fileLineEdit->text();
-
-    runner.setAlgorithm(currentAlgorithm.toStdString());
+    QString selectedAlgorithm = ui->algorithmComboBox->currentText();
+    runner.setAlgorithm(selectedAlgorithm.toStdString());
     runner.runCompression(filename.toStdString(), initialWindowSize);
 
     QString summary = QString::fromStdString(runner.getSummaryText());
     ui->resultsTextEdit->setText(summary);
+    qDebug() << "Running with algorithm:" << selectedAlgorithm;
+
 }
 
 
