@@ -36,6 +36,8 @@ add_executable(Thesis
         compressor_factory.h
         window_optimizer.cpp
         window_optimizer.h
+        huffman.cpp
+        huffman.h
 )
 
 # Link against Qt6 Widgets

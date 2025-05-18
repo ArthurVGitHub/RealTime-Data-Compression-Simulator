@@ -9,11 +9,13 @@
 #include <string>
 #include "drh.h"
 #include "delta.h"
+#include "huffman.h"
 // Add new algorithms
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
     if (name == "DRH") return std::make_unique<DRH>();
     if (name == "Delta") return std::make_unique<Delta>();
+    if(name == "Huffman") return std::make_unique<Huffman>();
     // Add more algorithms here
     throw std::runtime_error("Unknown algorithm: " + name);
 }
