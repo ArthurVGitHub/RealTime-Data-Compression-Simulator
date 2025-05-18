@@ -32,6 +32,10 @@ add_executable(Thesis
         delta.h
         ResultsTableDialog.cpp
         ResultsTableDialog.h
+        compressor_factory.cpp
+        compressor_factory.h
+        window_optimizer.cpp
+        window_optimizer.h
 )
 
 # Link against Qt6 Widgets

@@ -7,8 +7,8 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-
-class Delta {
+#include "compressor_interface.h"
+class Delta : public CompressorInterface{
 public:
     Delta();
 

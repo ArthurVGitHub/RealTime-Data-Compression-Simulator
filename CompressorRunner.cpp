@@ -1,6 +1,6 @@
 #include "CompressorRunner.h"
-#include "drh.h"
-#include "delta.h"
+#include "compressor_factory.h"
+#include "window_optimizer.h"
 #include "compare.h"
 #include "emodnet_extractor.h"
 #include <vector>
@@ -21,9 +21,8 @@ void CompressorRunner::setAlgorithm(const std::string &algorithmName) {
 }
 
 void CompressorRunner::compress_stream(const std::string& sensorName, const std::vector<double>& stream, int startWindowSize) {
-    if (algorithmName != "DRH" && algorithmName != "Delta") {
-        throw std::runtime_error("Compression algorithm not set or unsupported. Call setAlgorithm() first.");
-    }
+    // Create compressor ONCE per stream
+    auto compressor = createCompressor(algorithmName);
 
     std::deque<double> window;
     std::vector<double> allDecoded;
@@ -51,89 +50,45 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
         if (window.size() == windowSize) {
             std::vector<double> currentWindow(window.begin(), window.end());
 
-            // --- Adaptive window logic ---
-            double mean = 0.0;
-            for (double v : currentWindow) mean += v;
-            mean /= currentWindow.size();
-            double var = 0.0;
-            for (double v : currentWindow) var += (v - mean) * (v - mean);
-            var /= currentWindow.size();
-
             // Record current window size
             windowSizesUsed.push_back(windowSize);
 
-            // Adjust window size
-            if (var < lowVar && windowSize < maxWindow) {
-                windowSize++;
-            } else if (var > highVar && windowSize > minWindow) {
-                windowSize--;
-                if (window.size() > windowSize)
-                    window.pop_front();
-            }
-            // --- End adaptive logic ---
+            // --- Adaptive window logic using helper ---
+            int newWindowSize = WindowOptimizer::updateWindowSize(currentWindow, windowSize, minWindow, maxWindow, lowVar, highVar);
+            if (newWindowSize < windowSize && window.size() > newWindowSize)
+                window.pop_front();
+            windowSize = newWindowSize;
 
-            // --- NEW: Use a local compressor instance ---
+            // --- Compression ---
             std::vector<std::string> encoded;
             std::vector<double> decoded;
+
             auto startEncode = std::chrono::high_resolution_clock::now();
+            encoded = compressor->encode(currentWindow);
+            auto endEncode = std::chrono::high_resolution_clock::now();
 
-            if (algorithmName == "DRH") {
-                DRH drh;
-                encoded = drh.encode(currentWindow);
-                auto endEncode = std::chrono::high_resolution_clock::now();
+            auto startDecode = std::chrono::high_resolution_clock::now();
+            decoded = compressor->decode(encoded);
+            auto endDecode = std::chrono::high_resolution_clock::now();
 
-                auto startDecode = std::chrono::high_resolution_clock::now();
-                decoded = drh.decode(encoded);
-                auto endDecode = std::chrono::high_resolution_clock::now();
+            double encodeTimeMs = std::chrono::duration<double, std::milli>(endEncode - startEncode).count();
+            double decodeTimeMs = std::chrono::duration<double, std::milli>(endDecode - startDecode).count();
 
-                double encodeTimeMs = std::chrono::duration<double, std::milli>(endEncode - startEncode).count();
-                double decodeTimeMs = std::chrono::duration<double, std::milli>(endDecode - startDecode).count();
-
-                if (firstWindow) {
-                    allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
-                    firstWindow = false;
-                } else {
-                    allDecoded.push_back(decoded.back());
-                }
-
-                size_t inputBytes = currentWindow.size() * sizeof(double);
-                size_t outputBytes = 0;
-                for (const auto& s : encoded) outputBytes += s.size();
-
-                totalEncodeTimeMs += encodeTimeMs;
-                totalDecodeTimeMs += decodeTimeMs;
-                totalInputBytes += inputBytes;
-                totalOutputBytes += outputBytes;
+            if (firstWindow) {
+                allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
+                firstWindow = false;
+            } else {
+                allDecoded.push_back(decoded.back());
             }
-            else if (algorithmName == "Delta") {
-                Delta delta;
-                encoded = delta.encode(currentWindow);
-                auto endEncode = std::chrono::high_resolution_clock::now();
 
-                auto startDecode = std::chrono::high_resolution_clock::now();
-                decoded = delta.decode(encoded);
-                auto endDecode = std::chrono::high_resolution_clock::now();
+            size_t inputBytes = currentWindow.size() * sizeof(double);
+            size_t outputBytes = 0;
+            for (const auto& s : encoded) outputBytes += s.size();
 
-                double encodeTimeMs = std::chrono::duration<double, std::milli>(endEncode - startEncode).count();
-                double decodeTimeMs = std::chrono::duration<double, std::milli>(endDecode - startDecode).count();
-
-                if (firstWindow) {
-                    allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
-                    firstWindow = false;
-                } else {
-                    allDecoded.push_back(decoded.back());
-                }
-
-                size_t inputBytes = currentWindow.size() * sizeof(double);
-                size_t outputBytes = 0;
-                for (const auto& s : encoded) outputBytes += s.size();
-
-                totalEncodeTimeMs += encodeTimeMs;
-                totalDecodeTimeMs += decodeTimeMs;
-                totalInputBytes += inputBytes;
-                totalOutputBytes += outputBytes;
-            }
-            // --- END NEW ---
+            totalEncodeTimeMs += encodeTimeMs;
+            totalDecodeTimeMs += decodeTimeMs;
+            totalInputBytes += inputBytes;
+            totalOutputBytes += outputBytes;
         }
     }
 

@@ -3,8 +3,9 @@
 #include <string>
 #include <map>
 #include <cstdint>
+#include "compressor_interface.h"
 
-class DRH {
+class DRH : public CompressorInterface{
 public:
     DRH(); // No need for digitsAfterComma anymore
 
