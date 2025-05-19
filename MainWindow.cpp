@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QTextStream>
+#include <QSpinBox>
 #include "ResultsTableDialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -12,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
           currentAlgorithm("DRH")
 {
     ui->setupUi(this);
+    ui->windowSizeSpinBox->setMinimum(1);
 
     // Populate combo box
     //ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them
@@ -24,6 +26,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->saveCsvButton, &QPushButton::clicked, this, &MainWindow::on_saveCsvButton_clicked);
     connect(ui->visualizeButton, &QPushButton::clicked, this, &MainWindow::on_visualizeButton_clicked);
+
+    connect(ui->windowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onWindowSizeChanged);
+    // Disable window size spinbox when adaptive is enabled
+    connect(ui->adaptiveCheckBox, &QCheckBox::toggled, ui->windowSizeSpinBox, &QSpinBox::setDisabled);
+
 }
 
 MainWindow::~MainWindow() = default; // unique_ptr auto-deletes ui
@@ -35,14 +42,34 @@ void MainWindow::onAlgorithmChanged(const QString &text) {
 
 void MainWindow::on_runButton_clicked() {
     QString filename = ui->fileLineEdit->text();
+
+    QString selectedAlgorithm = ui->algorithmComboBox->currentText();
+
+    runner.setAlgorithm(selectedAlgorithm.toStdString());
+
+    bool useAdaptive = ui->adaptiveCheckBox->isChecked();
+    int windowSize = ui->windowSizeSpinBox->value();
+
+    runner.runCompression(filename.toStdString(), windowSize, useAdaptive);
+    QString summary = QString::fromStdString(runner.getSummaryText());
+    ui->resultsTextEdit->setText(summary);
+    qDebug() << "Running with algorithm:" << selectedAlgorithm;
+
+
+
+    /*QString filename = ui->fileLineEdit->text();
     QString selectedAlgorithm = ui->algorithmComboBox->currentText();
     runner.setAlgorithm(selectedAlgorithm.toStdString());
     runner.runCompression(filename.toStdString(), initialWindowSize);
 
     QString summary = QString::fromStdString(runner.getSummaryText());
     ui->resultsTextEdit->setText(summary);
-    qDebug() << "Running with algorithm:" << selectedAlgorithm;
+    qDebug() << "Running with algorithm:" << selectedAlgorithm;*/
 
+}
+
+void MainWindow::onWindowSizeChanged(int size) {
+    // Optional: handle window size changes here (e.g., validation, logging)
 }
 
 
@@ -78,7 +105,7 @@ void MainWindow::on_visualizeButton_clicked() {
     }
 
     QString csvData = QString::fromStdString(runner.getSummaryText());
-
+    //int windowSize = ui->windowSizeSpinBox->value();
     ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
     // No need to 'delete' if you use stack allocation

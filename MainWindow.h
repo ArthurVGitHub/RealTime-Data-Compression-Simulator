@@ -27,6 +27,8 @@ private:
     std::unique_ptr<Ui::MainWindow> ui;   // <<-- keep this private!
     QString currentAlgorithm;
     CompressorRunner runner;
+    void onWindowSizeChanged(int size);
+
 };
 
 #endif // MAINWINDOW_H

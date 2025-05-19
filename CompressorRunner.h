@@ -3,6 +3,8 @@
 #include <vector>
 #include <map>
 #include <mutex>
+#include <memory>
+#include "compressor_interface.h"
 
 struct SensorStats {
     size_t streamSize;
@@ -17,9 +19,9 @@ struct SensorStats {
 
 class CompressorRunner {
 public:
-    CompressorRunner();
+    CompressorRunner() = default;
     void setAlgorithm(const std::string &algorithmName);
-    void runCompression(const std::string& filename, int windowSize);
+    void runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize);
     std::map<std::string, SensorStats> getResults() const;
     std::string getSummaryText() const;
 
@@ -27,5 +29,7 @@ private:
     std::string algorithmName;  // <-- keep this private!
     std::map<std::string, SensorStats> results;
     mutable std::mutex resultsMutex;
-    void compress_stream(const std::string& sensorName, const std::vector<double>& stream, int startWindowSize);
+    void compress_stream(const std::string& sensorName, const std::vector<double>& stream, int startWindowSize, bool useAdaptiveWindowSize);
+
+    void processWindow(const std::vector<double> &currentWindow, std::unique_ptr<CompressorInterface> &compressor, std::vector<double> &allDecoded, bool &firstWindow, double &totalEncodeTimeMs, double &totalDecodeTimeMs, size_t &totalInputBytes, size_t &totalOutputBytes);
 };
