@@ -16,7 +16,7 @@ ResultsTableDialog::ResultsTableDialog(const QString& csvData, int windowSize, Q
     QVBoxLayout *layout = new QVBoxLayout(this);
 
     // Add window size label
-    QLabel *windowLabel = new QLabel(QString("Initial Window Size: %1").arg(windowSize), this);
+    QLabel *windowLabel = new QLabel(QString("Initial Window Size When Adaptive Window Is Enabled: %1").arg(windowSize), this);
     layout->addWidget(windowLabel);
 
     // Setup table
