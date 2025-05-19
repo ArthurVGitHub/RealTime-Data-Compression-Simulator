@@ -11,8 +11,6 @@ find_package(Qt6 COMPONENTS Widgets REQUIRED)
 add_executable(
         Thesis
         main.cpp
-        compressor.cpp
-        compressor.h
         compare.cpp
         compare.h
         drh.cpp
