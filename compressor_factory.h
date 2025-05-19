@@ -11,6 +11,8 @@
 #include "huffman.h"
 #include "lzw.h"
 #include "delta_rle.h"
+#include "delta_huffman.h"
+#include "delta_lzw.h"
 // Add new algorithms
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
@@ -18,6 +20,8 @@ inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& 
     if (name == "Delta(+RLE)") return std::make_unique<DeltaRle>();
     if(name == "Huffman") return std::make_unique<Huffman>();
     if (name == "LZW") return std::make_unique<Lzw>();
+    if (name == "Delta+Huffman") return std::make_unique<DeltaHuffman>();
+    if (name == "Delta+LZW") return std::make_unique<DeltaLzw>();
     // Add more algorithms here
     throw std::runtime_error("Unknown algorithm: " + name);
 }

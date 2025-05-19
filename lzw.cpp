@@ -44,11 +44,13 @@ std::string Lzw::lzw_decompress(const std::string& input) const {
         codes.push_back(code);
     }
 
+    if (codes.empty()) return ""; // <-- Add this line!
+
     std::unordered_map<int, std::string> dict;
     for (int i = 0; i < 256; ++i)
-        dict[i] = std::string(1, i);
+        dict[i] = std::string(1, static_cast<unsigned char>(i));
 
-    std::string w(1, codes[0]);
+    std::string w(1, static_cast<unsigned char>(codes[0]));
     std::string result = w;
     int dictSize = 256;
     for (size_t i = 1; i < codes.size(); ++i) {

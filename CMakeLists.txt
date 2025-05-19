@@ -39,5 +39,9 @@ add_executable(
         rle.h
         delta_rle.cpp
         delta_rle.h
+        delta_huffman.cpp
+        delta_huffman.h
+        delta_lzw.cpp
+        delta_lzw.h
 )
 target_link_libraries(Thesis PRIVATE Qt6::Widgets)
