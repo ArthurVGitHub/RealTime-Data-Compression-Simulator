@@ -8,14 +8,14 @@
 #include <memory>
 #include <string>
 #include "drh.h"
-#include "delta.h"
 #include "huffman.h"
 #include "lzw.h"
+#include "delta_rle.h"
 // Add new algorithms
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
     if (name == "DRH") return std::make_unique<DRH>();
-    if (name == "Delta(+RLE)") return std::make_unique<Delta>();
+    if (name == "Delta(+RLE)") return std::make_unique<DeltaRle>();
     if(name == "Huffman") return std::make_unique<Huffman>();
     if (name == "LZW") return std::make_unique<Lzw>();
     // Add more algorithms here

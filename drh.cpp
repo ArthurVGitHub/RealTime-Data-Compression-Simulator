@@ -8,13 +8,13 @@
 #include <cmath>
 
 // ======= Bitwise double <-> uint64_t helpers =======
-uint64_t doubleToUint64(double d) {
+static uint64_t doubleToUint64(double d) {
     uint64_t u;
     std::memcpy(&u, &d, sizeof(double));
     return u;
 }
 
-double uint64ToDouble(uint64_t u) {
+static double uint64ToDouble(uint64_t u) {
     double d;
     std::memcpy(&d, &u, sizeof(double));
     return d;

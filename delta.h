@@ -9,21 +9,12 @@
 #include <string>
 #include "compressor_interface.h"
 //combined with RLE actually
-class Delta : public CompressorInterface{
+class Delta{
 public:
     Delta() = default;
 
-    // Encode and decode interface
-    std::vector<std::string> encode(const std::vector<double>& data);
-    std::vector<double> decode(const std::vector<std::string>& encodedValues);
-
-private:
-    std::vector<int64_t> deltaEncodeLossless(const std::vector<double>& data) const;
-    std::vector<double> deltaDecodeLossless(const std::vector<int64_t>& deltas) const;
-
-    // Conversion helpers
-    uint64_t doubleToUint64(double d) const;
-    double uint64ToDouble(uint64_t u) const;
+    std::vector<int64_t> encode(const std::vector<double>& data) const;
+    std::vector<double> decode(const std::vector<int64_t>& deltas) const;
 };
 
 
