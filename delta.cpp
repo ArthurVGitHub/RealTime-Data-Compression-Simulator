@@ -3,6 +3,7 @@
 //
 
 #include "delta.h"
+#include "rle.h"
 #include <cstring>
 
 uint64_t Delta::doubleToUint64(double d) const {
@@ -49,23 +50,17 @@ std::vector<double> Delta::deltaDecodeLossless(const std::vector<int64_t>& delta
 std::vector<std::string> Delta::encode(const std::vector<double>& data) {
     std::vector<int64_t> deltas = deltaEncodeLossless(data);
 
-    // Serialize deltas into a byte stream
-    std::string serialized;
-    for (int64_t d : deltas) {
-        serialized.append(reinterpret_cast<const char*>(&d), sizeof(int64_t));
-    }
+    Rle rle;
+    std::string serialized = rle.encode(deltas);
 
     return {serialized};
 }
 
 std::vector<double> Delta::decode(const std::vector<std::string>& encodedValues) {
-    std::vector<int64_t> deltas;
     if (encodedValues.empty()) return {};
 
-    const std::string& data = encodedValues[0];
-    size_t count = data.size() / sizeof(int64_t);
-    deltas.resize(count);
-    std::memcpy(deltas.data(), data.data(), count * sizeof(int64_t));
+    Rle rle;
+    std::vector<int64_t> deltas = rle.decode(encodedValues[0]);
 
     return deltaDecodeLossless(deltas);
 }

@@ -15,7 +15,7 @@
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
     if (name == "DRH") return std::make_unique<DRH>();
-    if (name == "Delta") return std::make_unique<Delta>();
+    if (name == "Delta(+RLE)") return std::make_unique<Delta>();
     if(name == "Huffman") return std::make_unique<Huffman>();
     if (name == "LZW") return std::make_unique<Lzw>();
     // Add more algorithms here

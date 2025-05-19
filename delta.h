@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <string>
 #include "compressor_interface.h"
+//combined with RLE actually
 class Delta : public CompressorInterface{
 public:
     Delta() = default;

@@ -35,5 +35,7 @@ add_executable(
         huffman.h
         lzw.cpp
         lzw.h
+        rle.cpp
+        rle.h
 )
 target_link_libraries(Thesis PRIVATE Qt6::Widgets)
