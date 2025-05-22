@@ -15,6 +15,8 @@
 #include "delta_lzw.h"
 #include "sprintz.h"
 #include "lz77.h"
+#include "lz4_compresor.h"
+
 // Add new algorithms
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
@@ -26,6 +28,8 @@ inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& 
     if (name == "Delta+LZW") return std::make_unique<DeltaLzw>();
     if (name == "Sprintz") return std::make_unique<SprintzCompressor>();
     if (name == "LZ77") return std::make_unique<Lz77>();
+    if (name == "LZ4") return std::make_unique<LZ4Compressor>();
+
     // Add more algorithms here
     throw std::runtime_error("Unknown algorithm: " + name);
 }

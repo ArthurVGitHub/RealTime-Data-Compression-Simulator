@@ -86,6 +86,11 @@
       <string>LZ77</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>LZ4</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
