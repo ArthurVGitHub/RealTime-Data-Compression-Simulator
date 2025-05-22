@@ -76,6 +76,11 @@
       <string>Delta+Huffman</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>Sprintz</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
