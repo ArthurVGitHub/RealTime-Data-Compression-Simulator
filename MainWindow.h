@@ -21,6 +21,7 @@ private slots:
     void on_runButton_clicked();
     void onAlgorithmChanged(const QString &text);
     void on_visualizeButton_clicked();
+    void on_visualizeGraphButton_clicked();
 
 private:
     int initialWindowSize = 20;
@@ -28,7 +29,6 @@ private:
     QString currentAlgorithm;
     CompressorRunner runner;
     void onWindowSizeChanged(int size);
-
 };
 
 #endif // MAINWINDOW_H

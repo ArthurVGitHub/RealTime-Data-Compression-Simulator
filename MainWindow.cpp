@@ -6,6 +6,8 @@
 #include <QTextStream>
 #include <QSpinBox>
 #include "ResultsTableDialog.h"
+#include "SensorPlotDialog.h"
+#include <QVBoxLayout>
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent),
@@ -26,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->saveCsvButton, &QPushButton::clicked, this, &MainWindow::on_saveCsvButton_clicked);
     connect(ui->visualizeButton, &QPushButton::clicked, this, &MainWindow::on_visualizeButton_clicked);
-
+    connect(ui->visualizeGraphButton, &QPushButton::clicked, this, &MainWindow::on_visualizeGraphButton_clicked);
     connect(ui->windowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onWindowSizeChanged);
     // Disable window size spinbox when adaptive is enabled
     connect(ui->adaptiveCheckBox, &QCheckBox::toggled, ui->windowSizeSpinBox, &QSpinBox::setDisabled);
@@ -41,8 +43,8 @@ void MainWindow::onAlgorithmChanged(const QString &text) {
 
 
 void MainWindow::on_runButton_clicked() {
+    // 1. Get user input
     QString filename = ui->fileLineEdit->text();
-
     QString selectedAlgorithm = ui->algorithmComboBox->currentText();
 
     runner.setAlgorithm(selectedAlgorithm.toStdString());
@@ -50,22 +52,13 @@ void MainWindow::on_runButton_clicked() {
     bool useAdaptive = ui->adaptiveCheckBox->isChecked();
     int windowSize = ui->windowSizeSpinBox->value();
 
+    // 2. Run compression
     runner.runCompression(filename.toStdString(), windowSize, useAdaptive);
+
+    // 3. Update summary text
     QString summary = QString::fromStdString(runner.getSummaryText());
     ui->resultsTextEdit->setText(summary);
     qDebug() << "Running with algorithm:" << selectedAlgorithm;
-
-
-
-    /*QString filename = ui->fileLineEdit->text();
-    QString selectedAlgorithm = ui->algorithmComboBox->currentText();
-    runner.setAlgorithm(selectedAlgorithm.toStdString());
-    runner.runCompression(filename.toStdString(), initialWindowSize);
-
-    QString summary = QString::fromStdString(runner.getSummaryText());
-    ui->resultsTextEdit->setText(summary);
-    qDebug() << "Running with algorithm:" << selectedAlgorithm;*/
-
 }
 
 void MainWindow::onWindowSizeChanged(int size) {
@@ -109,4 +102,17 @@ void MainWindow::on_visualizeButton_clicked() {
     ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
     // No need to 'delete' if you use stack allocation
+
+}
+void MainWindow::on_visualizeGraphButton_clicked() {
+    if (runner.getResults().empty()) {
+        QMessageBox::information(this, "No Data", "Run compression first to see results.");
+        return;
+    }
+
+    auto originals = runner.getOriginalData();
+    auto decompressed = runner.getDecompressedData();
+
+    SensorPlotDialog dialog(originals, decompressed, this);
+    dialog.exec();
 }

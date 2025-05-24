@@ -86,6 +86,15 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
             totalDecodeTimeMs,
             valid
     };
+
+    {
+        std::lock_guard lock(resultsMutex);
+        results[sensorName] = stats;
+        originalData[sensorName] = stream;
+        decompressedData[sensorName] = allDecoded;
+    }
+
+
     std::lock_guard<std::mutex> lock(resultsMutex);
     results[sensorName] = stats;
 }
@@ -260,3 +269,13 @@ std::string CompressorRunner::getSummaryText() const {
     }
     return oss.str();
 }
+std::map<std::string, std::vector<double>> CompressorRunner::getOriginalData() const {
+    std::lock_guard lock(resultsMutex);
+    return originalData;
+}
+
+std::map<std::string, std::vector<double>> CompressorRunner::getDecompressedData() const {
+    std::lock_guard lock(resultsMutex);
+    return decompressedData;
+}
+

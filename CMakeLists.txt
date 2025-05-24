@@ -7,8 +7,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
-
+#find_package(Qt6 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
 add_executable(
         Thesis
         main.cpp
@@ -77,7 +77,12 @@ add_executable(
         lz4/lz4.h
         lz4_compressor.cpp
         lz4_compresor.h
+        graphLib/qcustomplot.cpp
+        graphLib/qcustomplot.h
+        SensorPlotDialog.cpp
+        SensorPlotDialog.h
 )
-target_link_libraries(Thesis PRIVATE Qt6::Widgets)
+#target_link_libraries(Thesis PRIVATE Qt6::Widgets)
+target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
 #target_compile_options(Thesis PRIVATE -mavx2 -mbmi -mbmi2 -mlzcnt)
 target_compile_options(Thesis PRIVATE -mavx2)

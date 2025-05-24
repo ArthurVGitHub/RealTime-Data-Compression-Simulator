@@ -30,10 +30,10 @@
    <widget class="QTextEdit" name="resultsTextEdit">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>70</y>
-      <width>501</width>
-      <height>441</height>
+      <x>210</x>
+      <y>60</y>
+      <width>581</width>
+      <height>181</height>
      </rect>
     </property>
    </widget>
@@ -194,6 +194,53 @@
     </property>
     <property name="text">
      <string>Fixed Window size:</string>
+    </property>
+   </widget>
+   <widget class="QScrollArea" name="graphsScrollArea">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>260</y>
+      <width>541</width>
+      <height>271</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>539</width>
+       <height>269</height>
+      </rect>
+     </property>
+     <widget class="QWidget" name="graphsWidget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>591</width>
+        <height>231</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout"/>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="visualizeGraphButton">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>390</y>
+      <width>75</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Graphs</string>
     </property>
    </widget>
   </widget>
