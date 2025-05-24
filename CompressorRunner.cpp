@@ -53,7 +53,7 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
 
                 // Process window
                 processWindow(currentWindow, compressor, allDecoded, firstWindow,
-                              totalEncodeTimeMs, totalDecodeTimeMs, totalInputBytes, totalOutputBytes);
+                              totalEncodeTimeMs, totalDecodeTimeMs, totalInputBytes, totalOutputBytes, sensorName, adaptiveWindowSize);
             }
         }
     } else {
@@ -64,7 +64,7 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
             std::vector<double> currentWindow(start, end);
 
             processWindow(currentWindow, compressor, allDecoded, firstWindow,
-                          totalEncodeTimeMs, totalDecodeTimeMs, totalInputBytes, totalOutputBytes);
+                          totalEncodeTimeMs, totalDecodeTimeMs, totalInputBytes, totalOutputBytes, sensorName, adaptiveWindowSize);;
         }
     }
 
@@ -72,6 +72,8 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
     double totalCR = totalOutputBytes == 0 ? 0 : static_cast<double>(totalInputBytes) / totalOutputBytes;
     double totalEncodeThroughputMBs = (totalEncodeTimeMs == 0) ? 0 : (totalInputBytes / (1024.0 * 1024.0)) / (totalEncodeTimeMs / 1000.0);
     double totalDecodeThroughputMBs = (totalDecodeTimeMs == 0) ? 0 : (totalOutputBytes / (1024.0 * 1024.0)) / (totalDecodeTimeMs / 1000.0);
+    double avgEncodeTimePerSampleUs = (totalEncodeTimeMs * 1000.0) / totalInputBytes;
+    double avgDecodeTimePerSampleUs = (totalDecodeTimeMs * 1000.0) / totalOutputBytes;
 
     bool valid = compareVectors(stream, allDecoded);
 
@@ -84,6 +86,8 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
             totalDecodeThroughputMBs,
             totalEncodeTimeMs,
             totalDecodeTimeMs,
+            avgEncodeTimePerSampleUs,
+            avgDecodeTimePerSampleUs,
             valid
     };
 
@@ -103,7 +107,7 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
                                      std::unique_ptr<CompressorInterface>& compressor,
                                      std::vector<double>& allDecoded, bool& firstWindow,
                                      double& totalEncodeTimeMs, double& totalDecodeTimeMs,
-                                     size_t& totalInputBytes, size_t& totalOutputBytes) {
+                                     size_t& totalInputBytes, size_t& totalOutputBytes, const std::string& sensorName, bool adaptiveWindowSize) {
     std::vector<std::string> encoded;
     std::vector<double> decoded;
 
@@ -118,14 +122,19 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     auto endDecode = std::chrono::high_resolution_clock::now();
 
     // Update decoded data
-    if (firstWindow) {
+    if (adaptiveWindowSize) {
+        if (firstWindow) {
+            allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
+            firstWindow = false;
+        } else {
+            allDecoded.push_back(decoded.back());
+        }
+    }else {
+        // Fixed window logic
         allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
-        firstWindow = false;
-    } else {
-        allDecoded.push_back(decoded.back());
     }
 
-    // Update metrics
+        // Update metrics
     size_t inputBytes = currentWindow.size() * sizeof(double);
     size_t outputBytes = 0;
     for (const auto& s : encoded) outputBytes += s.size();
@@ -134,6 +143,10 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     totalDecodeTimeMs += std::chrono::duration<double, std::milli>(endDecode - startDecode).count();
     totalInputBytes += inputBytes;
     totalOutputBytes += outputBytes;
+    double cr = (double)inputBytes / outputBytes;
+    crPerWindow[sensorName].push_back(cr);
+
+
 }
 
 /*
@@ -233,10 +246,15 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
 */
 void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize) {
     results.clear();
+    originalData.clear(); // <--- voeg deze toe als je dat nog niet doet
+    decompressedData.clear();
+    crPerWindow.clear();
+
     auto sensorStreams = EMODnetExtractor::extractSensorsData(filename);
 
     std::vector<std::thread> threads;
     for (const auto& [sensorName, stream] : sensorStreams) {
+        originalData[sensorName] = stream; // <-- altijd opslaan!
         if (stream.size() < windowSize || stream.empty()) {
             std::cerr << "Skipping sensor '" << sensorName
                       << "' - stream too small or empty (" << stream.size() << ")\n";
@@ -247,6 +265,7 @@ void CompressorRunner::runCompression(const std::string& filename, int windowSiz
     for (auto& t : threads) t.join();
 }
 
+
 std::map<std::string, SensorStats> CompressorRunner::getResults() const {
     std::lock_guard<std::mutex> lock(resultsMutex);
     return results;
@@ -255,7 +274,7 @@ std::map<std::string, SensorStats> CompressorRunner::getResults() const {
 std::string CompressorRunner::getSummaryText() const {
     std::ostringstream oss;
     oss << "Sensor,Stream Size,Window Size,CR,Compression Throughput (MB/s),"
-           "Decompression Throughput (MB/s),Compression Time (ms),Decompression Time (ms),Valid\n";
+           "Decompression Throughput (MB/s),Compression Time (ms),Decompression Time (ms), Average compression time per Sample, Average decompression time per Sample, Valid\n";
     for (const auto& [sensor, stats] : results) {
         oss << "\"" << sensor << "\","
             << stats.streamSize << ","
@@ -265,7 +284,9 @@ std::string CompressorRunner::getSummaryText() const {
             << stats.totalDecodeThroughputMBs << ","
             << stats.totalEncodeTimeMs << ","
             << stats.totalDecodeTimeMs << ","
-            << (stats.valid ? "true" : "false") << "\n";
+            << stats.avgEncodeTimePerSampleUs << ","
+            << stats.avgDecodeTimePerSampleUs << ","
+        << (stats.valid ? "true" : "false") << "\n";
     }
     return oss.str();
 }
@@ -277,5 +298,9 @@ std::map<std::string, std::vector<double>> CompressorRunner::getOriginalData() c
 std::map<std::string, std::vector<double>> CompressorRunner::getDecompressedData() const {
     std::lock_guard lock(resultsMutex);
     return decompressedData;
+}
+
+const std::map<std::string, std::vector<double>>& CompressorRunner::getCRPerWindow() const {
+    return crPerWindow;
 }
 

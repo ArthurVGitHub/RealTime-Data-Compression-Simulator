@@ -11,9 +11,9 @@
 class SensorPlotDialog : public QDialog {
 Q_OBJECT
 public:
-    SensorPlotDialog(const std::map<std::string, std::vector<double>>& originals,
-                     const std::map<std::string, std::vector<double>>& decompressed,
-                     QWidget* parent = nullptr);
+    SensorPlotDialog(const std::map<std::string, std::vector<double>> &originals,
+                     const std::map<std::string, std::vector<double>> &decompressed,
+                     const std::map<std::string, std::vector<double>> &crPerWindow, QWidget *parent);
 };
 
 #endif //THESIS_SENSORPLOTDIALOG_H

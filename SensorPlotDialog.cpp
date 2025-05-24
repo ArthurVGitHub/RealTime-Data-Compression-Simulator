@@ -4,45 +4,85 @@
 
 #include "SensorPlotDialog.h"
 
-SensorPlotDialog::SensorPlotDialog(const std::map<std::string, std::vector<double>>& originals,
-                                   const std::map<std::string, std::vector<double>>& decompressed,
-                                   QWidget* parent)
-        : QDialog(parent)
+SensorPlotDialog::SensorPlotDialog(
+        const std::map<std::string, std::vector<double>>& originals,
+        const std::map<std::string, std::vector<double>>& decompressed,
+        const std::map<std::string, std::vector<double>>& crPerWindow,
+        QWidget* parent
+) : QDialog(parent)
 {
-    QVBoxLayout* layout = new QVBoxLayout(this);
-    QTabWidget* tabs = new QTabWidget(this);
+    setWindowTitle("Sensor Plots");
+    setMinimumSize(1000, 600);
+
+    QScrollArea* scrollArea = new QScrollArea(this);
+    QWidget* scrollContent = new QWidget;
+    QVBoxLayout* mainLayout = new QVBoxLayout(scrollContent);
 
     for (const auto& [sensor, origData] : originals) {
-        QWidget* tab = new QWidget;
-        QVBoxLayout* tabLayout = new QVBoxLayout(tab);
-        QCustomPlot* plot = new QCustomPlot;
-        QVector<double> x, yOrig, yDecomp;
+        if (decompressed.count(sensor) == 0) continue;
 
-        for (int i = 0; i < origData.size(); ++i) {
+        // Container voor deze sensor
+        QWidget* sensorWidget = new QWidget;
+        QVBoxLayout* sensorLayout = new QVBoxLayout(sensorWidget);
+
+        QCustomPlot* plot = new QCustomPlot(sensorWidget);
+
+        // 1. Data voorbereiden
+        QVector<double> x, yOrig, yDecomp, yCR;
+        //const auto& origData = originals.at(sensor);
+        const auto& decompData = decompressed.at(sensor);
+        const auto& crVec = crPerWindow.at(sensor);
+
+        int n = origData.size();
+        for (int i = 0; i < n; ++i) {
             x.push_back(i);
             yOrig.push_back(origData[i]);
-            yDecomp.push_back(decompressed.at(sensor)[i]);
+            yDecomp.push_back(decompData[i]);
+            // CR per window is meestal minder punten (1 waarde per window)
+            // Je kunt deze over de window plotten, of interpoleren over alle samples
+            if (i < crVec.size()) {
+                yCR.push_back(crVec[i]);
+            } else {
+                yCR.push_back(crVec.back()); // laatste waarde herhalen
+            }
         }
 
+// 2. Originele data
         plot->addGraph();
         plot->graph(0)->setData(x, yOrig);
         plot->graph(0)->setPen(QPen(Qt::blue));
-        plot->graph(0)->setName("Original");
+        plot->graph(0)->setName("Origineel");
 
+// 3. Gedecomprimeerde data
         plot->addGraph();
         plot->graph(1)->setData(x, yDecomp);
-        plot->graph(1)->setPen(QPen(Qt::red));
-        plot->graph(1)->setName("Decompressed");
+        plot->graph(1)->setPen(QPen(Qt::green));
+        plot->graph(1)->setName("Gedecomprimeerd");
 
+// 4. CR-curve (optioneel schalen als de schaal heel anders is)
+        plot->addGraph();
+        plot->graph(2)->setData(x, yCR);
+        plot->graph(2)->setPen(QPen(Qt::darkMagenta, 2, Qt::DashLine));
+        plot->graph(2)->setName("Compressieratio (CR)");
+
+// 5. Labels en legenda
+        plot->xAxis->setLabel("Sample index");
+        plot->yAxis->setLabel("Waarde / CR");
         plot->legend->setVisible(true);
-        plot->xAxis->setLabel("Measurement");
-        plot->yAxis->setLabel("Value");
         plot->rescaleAxes();
+        plot->plotLayout()->insertRow(0);
+        plot->plotLayout()->addElement(0, 0, new QCPTextElement(plot, "Origineel, gedecomprimeerd en CR", QFont("sans", 10, QFont::Bold)));
+        plot->setMinimumHeight(250);
 
-        tabLayout->addWidget(plot);
-        tabs->addTab(tab, QString::fromStdString(sensor));
+// Voeg toe aan je layout
+        sensorLayout->addWidget(plot);
+        mainLayout->addWidget(sensorWidget);
+
     }
-    setMinimumSize(800, 600);
-    layout->addWidget(tabs);
-    setLayout(layout);
+
+    scrollArea->setWidget(scrollContent);
+    scrollArea->setWidgetResizable(true);
+
+    QVBoxLayout* dialogLayout = new QVBoxLayout(this);
+    dialogLayout->addWidget(scrollArea);
 }

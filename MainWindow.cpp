@@ -112,7 +112,8 @@ void MainWindow::on_visualizeGraphButton_clicked() {
 
     auto originals = runner.getOriginalData();
     auto decompressed = runner.getDecompressedData();
+    auto crPerWindow = runner.getCRPerWindow();
 
-    SensorPlotDialog dialog(originals, decompressed, this);
+    SensorPlotDialog dialog(originals, decompressed, crPerWindow, this);
     dialog.exec();
 }
