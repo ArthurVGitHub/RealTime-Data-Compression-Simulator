@@ -43,32 +43,6 @@ add_executable(
         delta_huffman.cpp
         delta_huffman.h
         delta_lzw.cpp
-#        delta_lzw.h
-#        Sprintz/sprintz.cpp
-#        Sprintz/sprintz.h
-#        sprintz_compressor.cpp
-#        sprintz_compressor.h
-#        Sprintz/sprintz_format.cpp
-#        Sprintz/sprintz_format.h
-#        Sprintz/sprintz_delta.cpp
-#        Sprintz/sprintz_delta.h
-#        Sprintz/sprintz_xff.cpp
-#        Sprintz/sprintz_xff.h
-#        Sprintz/sprintz_util.h
-#        Sprintz/sprintz_macros.h
-#        Sprintz/sprintz_bitpack.h
-#        Sprintz/sprintz_query.hpp
-#        Sprintz/sprintz_traits.hpp
-#        Sprintz/sprintz_delta_lowdim.cpp
-#        Sprintz/sprintz_delta_rle.cpp
-#        Sprintz/sprintz_delta_rle_query.cpp
-#        Sprintz/sprintz_delta_rle_query.hpp
-#        Sprintz/sprintz_xff_rle.cpp
-#        Sprintz/sprintz_xff_rle_query.cpp
-#        Sprintz/sprintz_xff_rle_query.hpp
-#        Sprintz/sprintz_transpose.h
-#        Sprintz/univariate_8b.cpp
-#        Sprintz/univariate_8b.h
         sprintz.cpp
         sprintz.h
         lz77.cpp
