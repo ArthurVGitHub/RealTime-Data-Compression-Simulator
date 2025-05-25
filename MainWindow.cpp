@@ -8,6 +8,7 @@
 #include "ResultsTableDialog.h"
 #include "SensorPlotDialog.h"
 #include <QVBoxLayout>
+#include "graphLib/QCustomPlot.h"
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent),
@@ -18,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->windowSizeSpinBox->setMinimum(1);
 
     // Populate combo box
-    //ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them
+    //ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them done graphically now
 
     // Connect combo box change
     connect(ui->algorithmComboBox, &QComboBox::currentTextChanged,
