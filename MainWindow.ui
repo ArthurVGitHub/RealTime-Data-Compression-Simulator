@@ -96,6 +96,11 @@
       <string>zstd</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>lzma</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">

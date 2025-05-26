@@ -10,6 +10,7 @@ set(CMAKE_AUTOUIC ON)
 
 include_directories(${CMAKE_SOURCE_DIR}/zstandard)
 link_directories(${CMAKE_SOURCE_DIR}/zstandard)
+include_directories(${CMAKE_SOURCE_DIR}/lzma)
 
 #find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
@@ -61,6 +62,15 @@ add_executable(
         SensorPlotDialog.h
         zstd_compressor.cpp
         zstd_compressor.h
+        lzma/C/LzmaEnc.c
+        lzma/C/LzmaDec.c
+        lzma/C/LzFind.c
+        lzma/C/LzFindMt.c
+        lzma/C/LzFindOpt.c
+        lzma/C/CpuArch.c
+        lzma/C/Threads.c
+        lzma_compressor.cpp
+        lzma_compressor.h
 )
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets)
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
