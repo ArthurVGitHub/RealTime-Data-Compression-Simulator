@@ -12,7 +12,8 @@ include_directories(${CMAKE_SOURCE_DIR}/zstandard)
 link_directories(${CMAKE_SOURCE_DIR}/zstandard)
 include_directories(${CMAKE_SOURCE_DIR}/lzma)
 include_directories(${CMAKE_SOURCE_DIR}/lzo/lzo-2.10/include)
-
+include_directories(${CMAKE_SOURCE_DIR}/snappy/build)
+include_directories(${CMAKE_SOURCE_DIR}/snappy)
 #find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
 add_executable(
@@ -78,11 +79,14 @@ add_executable(
         lzo/lzo-2.10/src/lzo1x_d1.c
         lzo_compressor.cpp
         lzo_compressor.h
+        snappy_compressor.cpp
+        snappy_compressor.h
 )
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets)
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
 target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport zstd)
-
+#target_link_libraries(Thesis PRIVATE snappy)
+target_link_libraries(Thesis PRIVATE ${CMAKE_SOURCE_DIR}/snappy/build/libsnappy.a)
 #target_compile_options(Thesis PRIVATE -mavx2 -mbmi -mbmi2 -mlzcnt)
 target_compile_options(Thesis PRIVATE -mavx2)
 
