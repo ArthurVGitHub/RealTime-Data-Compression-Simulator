@@ -1,21 +1,20 @@
-//
-// Created by arthu on 19/05/2025.
-//
-
 #ifndef THESIS_RLE_H
 #define THESIS_RLE_H
-#pragma once
+
 #include <vector>
-#include <cstdint>
 #include <string>
+#include <cstdint>
+#include "Compressor_Interface.h"
 
-class Rle {
+class Rle : public CompressorInterface {
 public:
-    // Encodes a vector of int64_t into (value, count) pairs and serializes to a string
-    std::string encode(const std::vector<int64_t>& data) const;
+    // For general use (double, lossless), otherwise decoding less precise and you don't get true
+    std::vector<std::string> encode(const std::vector<double>& data) override;
+    std::vector<double> decode(const std::vector<std::string>& encoded) override;
 
-    // Decodes a string of (value, count) pairs back to a vector of int64_t
+    // For DeltaRle (int64_t, efficient)
+    std::string encode(const std::vector<int64_t>& data) const;
     std::vector<int64_t> decode(const std::string& encoded) const;
 };
 
-#endif //THESIS_RLE_H
+#endif // THESIS_RLE_H
