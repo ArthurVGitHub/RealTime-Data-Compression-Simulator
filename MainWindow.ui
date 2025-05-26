@@ -91,6 +91,11 @@
       <string>LZ4</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>zstd</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">

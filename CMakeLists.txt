@@ -7,6 +7,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+
+include_directories(${CMAKE_SOURCE_DIR}/zstandard)
+link_directories(${CMAKE_SOURCE_DIR}/zstandard)
+
 #find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
 add_executable(
@@ -55,8 +59,14 @@ add_executable(
         graphLib/qcustomplot.h
         SensorPlotDialog.cpp
         SensorPlotDialog.h
+        zstd_compressor.cpp
+        zstd_compressor.h
 )
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets)
-target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
+#target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
+target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport zstd)
+
 #target_compile_options(Thesis PRIVATE -mavx2 -mbmi -mbmi2 -mlzcnt)
 target_compile_options(Thesis PRIVATE -mavx2)
+
+
