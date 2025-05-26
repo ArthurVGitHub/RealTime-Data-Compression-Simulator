@@ -101,6 +101,11 @@
       <string>lzma</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>lzo</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">

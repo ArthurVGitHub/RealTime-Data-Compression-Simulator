@@ -11,6 +11,7 @@ set(CMAKE_AUTOUIC ON)
 include_directories(${CMAKE_SOURCE_DIR}/zstandard)
 link_directories(${CMAKE_SOURCE_DIR}/zstandard)
 include_directories(${CMAKE_SOURCE_DIR}/lzma)
+include_directories(${CMAKE_SOURCE_DIR}/lzo/lzo-2.10/include)
 
 #find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
@@ -71,6 +72,12 @@ add_executable(
         lzma/C/Threads.c
         lzma_compressor.cpp
         lzma_compressor.h
+        lzo/lzo-2.10/src/lzo1x_1.c
+        lzo/lzo-2.10/src/lzo_util.c
+        lzo/lzo-2.10/src/lzo_init.c
+        lzo/lzo-2.10/src/lzo1x_d1.c
+        lzo_compressor.cpp
+        lzo_compressor.h
 )
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets)
 #target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)

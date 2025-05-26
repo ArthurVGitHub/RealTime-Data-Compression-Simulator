@@ -18,6 +18,7 @@
 #include "lz4_compresor.h"
 #include "zstd_compressor.h"
 #include "lzma_compressor.h"
+#include "lzo_compressor.h"
 // Add new algorithms
 
 inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& name) {
@@ -32,7 +33,7 @@ inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& 
     if (name == "LZ4") return std::make_unique<LZ4Compressor>();
     if (name == "zstd") return std::make_unique<ZstdCompressor>();
     if (name == "lzma") return std::make_unique<LzmaCompressor>();
-
+    if (name == "lzo") return std::make_unique<LzoCompressor>();
     // Add more algorithms here
     throw std::runtime_error("Unknown algorithm: " + name);
 }
