@@ -14,6 +14,8 @@ include_directories(${CMAKE_SOURCE_DIR}/lzma)
 include_directories(${CMAKE_SOURCE_DIR}/lzo/lzo-2.10/include)
 include_directories(${CMAKE_SOURCE_DIR}/snappy/build)
 include_directories(${CMAKE_SOURCE_DIR}/snappy)
+include_directories(${CMAKE_SOURCE_DIR}/lz77/yalz77-master)
+
 #find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
 add_executable(
@@ -52,8 +54,8 @@ add_executable(
         delta_lzw.cpp
         sprintz.cpp
         sprintz.h
-        lz77.cpp
-        lz77.h
+        lz77_compressor.cpp
+        lz77_compressor.h
         lz4/lz4.c
         lz4/lz4.h
         lz4_compressor.cpp
