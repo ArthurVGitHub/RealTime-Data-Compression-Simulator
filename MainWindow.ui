@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>330</y>
+      <y>290</y>
       <width>75</width>
       <height>24</height>
      </rect>
@@ -33,7 +33,7 @@
       <x>210</x>
       <y>60</y>
       <width>581</width>
-      <height>181</height>
+      <height>461</height>
      </rect>
     </property>
    </widget>
@@ -160,7 +160,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>450</y>
+      <y>440</y>
       <width>75</width>
       <height>24</height>
      </rect>
@@ -233,26 +233,6 @@
     <property name="text">
      <string>Graphs</string>
     </property>
-   </widget>
-   <widget class="QFrame" name="framePlots">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>250</y>
-      <width>541</width>
-      <height>291</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true"/>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Shape::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Shadow::Raised</enum>
-    </property>
-    <layout class="QGridLayout" name="gridLayout"/>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

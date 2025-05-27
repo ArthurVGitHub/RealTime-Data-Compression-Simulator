@@ -12,14 +12,11 @@
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent),
-          ui(std::make_unique<Ui::MainWindow>()),   // <<-- correct initialization
+          ui(std::make_unique<Ui::MainWindow>()),
           currentAlgorithm("DRH")
 {
     ui->setupUi(this);
     ui->windowSizeSpinBox->setMinimum(1);
-
-    // Populate combo box
-    //ui->algorithmComboBox->addItems({"DRH"}); // Add more as you implement them done graphically now
 
     // Connect combo box change
     connect(ui->algorithmComboBox, &QComboBox::currentTextChanged,
@@ -102,7 +99,6 @@ void MainWindow::on_visualizeButton_clicked() {
     //int windowSize = ui->windowSizeSpinBox->value();
     ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
-    // No need to 'delete' if you use stack allocation
 
 }
 void MainWindow::on_visualizeGraphButton_clicked() {
