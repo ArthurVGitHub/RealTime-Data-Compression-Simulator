@@ -151,7 +151,7 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
 
 void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize) {
     results.clear();
-    originalData.clear(); // <--- voeg deze toe als je dat nog niet doet
+    originalData.clear();
     decompressedData.clear();
     crPerWindow.clear();
 
@@ -208,4 +208,3 @@ std::map<std::string, std::vector<double>> CompressorRunner::getDecompressedData
 const std::map<std::string, std::vector<double>>& CompressorRunner::getCRPerWindow() const {
     return crPerWindow;
 }
-

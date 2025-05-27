@@ -16,7 +16,6 @@ include_directories(${CMAKE_SOURCE_DIR}/snappy/build)
 include_directories(${CMAKE_SOURCE_DIR}/snappy)
 include_directories(${CMAKE_SOURCE_DIR}/lz77/yalz77-master)
 
-#find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(Qt6 COMPONENTS Widgets PrintSupport REQUIRED)
 add_executable(
         Thesis
@@ -84,12 +83,7 @@ add_executable(
         snappy_compressor.cpp
         snappy_compressor.h
 )
-#target_link_libraries(Thesis PRIVATE Qt6::Widgets)
-#target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport)
 target_link_libraries(Thesis PRIVATE Qt6::Widgets Qt6::PrintSupport zstd)
-#target_link_libraries(Thesis PRIVATE snappy)
 target_link_libraries(Thesis PRIVATE ${CMAKE_SOURCE_DIR}/snappy/build/libsnappy.a)
-#target_compile_options(Thesis PRIVATE -mavx2 -mbmi -mbmi2 -mlzcnt)
+
 target_compile_options(Thesis PRIVATE -mavx2)
-
-
