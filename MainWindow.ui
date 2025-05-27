@@ -53,11 +53,6 @@
     </item>
     <item>
      <property name="text">
-      <string>Nieuw item</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
       <string>Delta(+RLE)</string>
      </property>
     </item>
@@ -98,22 +93,22 @@
     </item>
     <item>
      <property name="text">
-      <string>zstd</string>
+      <string>Zstd</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>lzma</string>
+      <string>LZMA</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>lzo</string>
+      <string>LZO</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>snappy</string>
+      <string>Snappy</string>
      </property>
     </item>
     <item>

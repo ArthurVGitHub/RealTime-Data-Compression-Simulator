@@ -33,10 +33,10 @@ inline std::unique_ptr<CompressorInterface> createCompressor(const std::string& 
     if (name == "Sprintz") return std::make_unique<SprintzCompressor>();
     if (name == "LZ77") return std::make_unique<Lz77>();
     if (name == "LZ4") return std::make_unique<LZ4Compressor>();
-    if (name == "zstd") return std::make_unique<ZstdCompressor>();
-    if (name == "lzma") return std::make_unique<LzmaCompressor>();
-    if (name == "lzo") return std::make_unique<LzoCompressor>();
-    if (name == "snappy") return std::make_unique<SnappyCompressor>();
+    if (name == "Zstd") return std::make_unique<ZstdCompressor>();
+    if (name == "LZMA") return std::make_unique<LzmaCompressor>();
+    if (name == "LZO") return std::make_unique<LzoCompressor>();
+    if (name == "Snappy") return std::make_unique<SnappyCompressor>();
     if (name == "(SW-)RLE") return std::make_unique<Rle>();
 
     // Add more algorithms here
