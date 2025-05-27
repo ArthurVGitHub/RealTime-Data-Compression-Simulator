@@ -1,63 +1,50 @@
 #include "lz4_compresor.h"
 #include "lz4/lz4.h"
 #include <cstring>
-#include <cmath>
 #include <stdexcept>
-
-// Quantize doubles to int16_t
-std::vector<int16_t> LZ4Compressor::quantize(const std::vector<double>& data) const {
-    std::vector<int16_t> out(data.size());
-    for (size_t i = 0; i < data.size(); ++i)
-        out[i] = static_cast<int16_t>(std::round(data[i] * scale));
-    return out;
-}
-
-std::vector<double> LZ4Compressor::dequantize(const std::vector<int16_t>& data) const {
-    std::vector<double> out(data.size());
-    for (size_t i = 0; i < data.size(); ++i)
-        out[i] = static_cast<double>(data[i]) / scale;
-    return out;
-}
+#include <iostream>
 
 std::vector<std::string> LZ4Compressor::encode(const std::vector<double>& data) {
-    if (data.empty()) return {};
-    auto q = quantize(data);
-
-    // Compress as raw bytes
-    const char* src = reinterpret_cast<const char*>(q.data());
-    int srcSize = static_cast<int>(q.size() * sizeof(int16_t));
+    if (data.empty()) return {""};
+    const char* src = reinterpret_cast<const char*>(data.data());
+    int srcSize = static_cast<int>(data.size() * sizeof(double));
     int maxDstSize = LZ4_compressBound(srcSize);
-    std::string compressed(maxDstSize, '\0');
 
-    int compressedSize = LZ4_compress_default(src, &compressed[0], srcSize, maxDstSize);
+    std::string out;
+    out.resize(sizeof(uint64_t) + maxDstSize);
+
+    uint64_t origNumDoubles = data.size();
+    std::memcpy(&out[0], &origNumDoubles, sizeof(uint64_t));
+
+    int compressedSize = LZ4_compress_default(
+            src, &out[sizeof(uint64_t)], srcSize, maxDstSize
+    );
     if (compressedSize <= 0) throw std::runtime_error("LZ4 compression failed");
 
-    // Store original size for decompression (first 4 bytes)
-    std::string out(sizeof(int), '\0');
-    std::memcpy(&out[0], &srcSize, sizeof(int));
-    out.append(compressed.data(), compressedSize);
-
+    out.resize(sizeof(uint64_t) + compressedSize);
     return {out};
 }
 
 std::vector<double> LZ4Compressor::decode(const std::vector<std::string>& encodedValues) {
-    if (encodedValues.empty()) return {};
+    if (encodedValues.empty() || encodedValues[0].size() < sizeof(uint64_t)) return {};
     const std::string& in = encodedValues[0];
 
-    if (in.size() < sizeof(int)) throw std::runtime_error("LZ4: input too small");
+    uint64_t origNumDoubles = 0;
+    std::memcpy(&origNumDoubles, in.data(), sizeof(uint64_t));
 
-    int srcSize = 0;
-    std::memcpy(&srcSize, in.data(), sizeof(int));
-    if (srcSize <= 0) throw std::runtime_error("LZ4: bad stored size");
+    std::vector<double> output(origNumDoubles);
+    int expectedSize = static_cast<int>(origNumDoubles * sizeof(double));
+    int compressedSize = static_cast<int>(in.size() - sizeof(uint64_t));
 
-    std::vector<int16_t> q(srcSize / sizeof(int16_t));
     int decompressedSize = LZ4_decompress_safe(
-            in.data() + sizeof(int),
-            reinterpret_cast<char*>(q.data()),
-            static_cast<int>(in.size() - sizeof(int)),
-            srcSize
+            in.data() + sizeof(uint64_t),
+            reinterpret_cast<char*>(output.data()),
+            compressedSize,
+            expectedSize
     );
-    if (decompressedSize != srcSize) throw std::runtime_error("LZ4 decompression failed");
-
-    return dequantize(q);
+    if (decompressedSize != expectedSize) {
+        std::cerr << "LZ4 decompressed size mismatch: got " << decompressedSize << ", expected " << expectedSize << std::endl;
+        throw std::runtime_error("LZ4 decompression failed");
+    }
+    return output;
 }

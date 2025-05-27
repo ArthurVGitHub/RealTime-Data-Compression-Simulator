@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-
+include_directories(${CMAKE_SOURCE_DIR}/lz4)
 include_directories(${CMAKE_SOURCE_DIR}/zstandard)
 link_directories(${CMAKE_SOURCE_DIR}/zstandard)
 include_directories(${CMAKE_SOURCE_DIR}/lzma)
