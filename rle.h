@@ -5,7 +5,7 @@
 #include <string>
 #include <cstdint>
 #include "Compressor_Interface.h"
-
+//SW-RLE with the combination of the moving window in CompressorRunner
 class Rle : public CompressorInterface {
 public:
     // For general use (double, lossless), otherwise decoding less precise and you don't get true
