@@ -18,19 +18,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     ui->windowSizeSpinBox->setMinimum(1);
 
-    // Connect combo box change
+    // Only connect signals that do NOT use the auto-connect slot naming
     connect(ui->algorithmComboBox, &QComboBox::currentTextChanged,
             this, &MainWindow::onAlgorithmChanged);
 
-    connect(ui->runButton, &QPushButton::clicked, this, &MainWindow::on_runButton_clicked);
-
-    connect(ui->saveCsvButton, &QPushButton::clicked, this, &MainWindow::on_saveCsvButton_clicked);
-    connect(ui->visualizeButton, &QPushButton::clicked, this, &MainWindow::on_visualizeButton_clicked);
-    connect(ui->visualizeGraphButton, &QPushButton::clicked, this, &MainWindow::on_visualizeGraphButton_clicked);
     connect(ui->windowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onWindowSizeChanged);
+
     // Disable window size spinbox when adaptive is enabled
     connect(ui->adaptiveCheckBox, &QCheckBox::toggled, ui->windowSizeSpinBox, &QSpinBox::setDisabled);
 
+    // REMOVE all manual connect() calls for runButton, saveCsvButton, visualizeButton, visualizeGraphButton!
 }
 
 MainWindow::~MainWindow() = default; // unique_ptr auto-deletes ui
@@ -39,9 +36,8 @@ void MainWindow::onAlgorithmChanged(const QString &text) {
     runner.setAlgorithm(text.toStdString());
 }
 
-
 void MainWindow::on_runButton_clicked() {
-    // 1. Get user input
+    qDebug() << "runButton clicked!";
     QString filename = ui->fileLineEdit->text();
     QString selectedAlgorithm = ui->algorithmComboBox->currentText();
 
@@ -62,7 +58,6 @@ void MainWindow::on_runButton_clicked() {
 void MainWindow::onWindowSizeChanged(int size) {
     // Optional: handle window size changes here (e.g., validation, logging)
 }
-
 
 void MainWindow::on_saveCsvButton_clicked() {
     QString defaultName = QDir::homePath() + "/compression_results.csv";
@@ -96,11 +91,10 @@ void MainWindow::on_visualizeButton_clicked() {
     }
 
     QString csvData = QString::fromStdString(runner.getSummaryText());
-    //int windowSize = ui->windowSizeSpinBox->value();
     ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
-
 }
+
 void MainWindow::on_visualizeGraphButton_clicked() {
     if (runner.getResults().empty()) {
         QMessageBox::information(this, "No Data", "Run compression first to see results.");

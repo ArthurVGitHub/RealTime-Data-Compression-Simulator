@@ -1,4 +1,3 @@
-
 #include "emodnet_extractor.h"
 #include <fstream>
 #include <sstream>
