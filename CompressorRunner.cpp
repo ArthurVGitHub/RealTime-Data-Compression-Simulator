@@ -144,9 +144,10 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     totalInputBytes += inputBytes;
     totalOutputBytes += outputBytes;
     double cr = (double)inputBytes / outputBytes;
+
+    emit crUpdated(QString::fromStdString(sensorName), cr);
+
     crPerWindow[sensorName].push_back(cr);
-
-
 }
 
 void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize) {
@@ -168,6 +169,7 @@ void CompressorRunner::runCompression(const std::string& filename, int windowSiz
         threads.emplace_back(&CompressorRunner::compress_stream, this, sensorName, stream, windowSize, useAdaptiveWindowSize);
     }
     for (auto& t : threads) t.join();
+    emit compressionFinished(); // NEW
 }
 
 

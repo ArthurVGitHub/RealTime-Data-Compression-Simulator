@@ -5,6 +5,7 @@
 #include <mutex>
 #include <memory>
 #include "compressor_interface.h"
+#include <QObject> //NEW
 
 struct SensorStats {
     size_t streamSize;
@@ -19,7 +20,8 @@ struct SensorStats {
     bool valid;
 };
 
-class CompressorRunner {
+class CompressorRunner: public QObject {
+    Q_OBJECT
 public:
     CompressorRunner() = default;
     void setAlgorithm(const std::string &algorithmName);
@@ -42,5 +44,7 @@ private:
     std::map<std::string, std::vector<double>> decompressedData;
     std::map<std::string, std::vector<double>> crPerWindow;
 
-
+signals:
+    void crUpdated(const QString& sensorName, double cr);
+    void compressionFinished();
 };
