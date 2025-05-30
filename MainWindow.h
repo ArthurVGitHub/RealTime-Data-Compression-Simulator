@@ -27,6 +27,8 @@ private slots:
     void updateLiveCrDisplay(const QString &sensorName, double cr);
 private:
     int initialWindowSize = 20;
+    QLabel* liveCrTitleLabel = nullptr; // Add this
+
     std::unique_ptr<Ui::MainWindow> ui;   // <<-- keep this private!
     QString currentAlgorithm;
     //CompressorRunner runner;
@@ -38,6 +40,8 @@ private:
     std::map<QString, QLabel*> liveCrLabels;  // Maps sensor names to their labels
     QVBoxLayout* liveCrLayout;  // Added in Qt Designer
     void clearLiveCrDisplay();
+
+    void updateLiveCrTitle(int interval);
 };
 
 #endif // MAINWINDOW_H

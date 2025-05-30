@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->windowSizeSpinBox->setMinimum(1);
+    ui->updateIntervalSpinBox->setValue(5); // Set default to 5
 
     // Move runner to worker thread
     runner->moveToThread(&workerThread);
@@ -40,6 +41,9 @@ MainWindow::MainWindow(QWidget *parent)
         ui->resultsTextEdit->setText(summary);
     });
 
+    connect(ui->updateIntervalSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MainWindow::updateLiveCrTitle);
+
     // Create scroll area and layout for live CR display
     QScrollArea* scrollArea = new QScrollArea(this);
     QWidget* scrollWidget = new QWidget(scrollArea);
@@ -49,10 +53,10 @@ MainWindow::MainWindow(QWidget *parent)
     scrollArea->setWidgetResizable(true);
     ui->verticalLayout->addWidget(scrollArea);
 
-    // In your constructor, after creating liveCrLayout
-    QLabel* titleLabel = new QLabel("Real-Time Compression Ratie per Window", this);
-    titleLabel->setStyleSheet("font-weight: bold; font-size: 16px;");
-    liveCrLayout->insertWidget(0, titleLabel); // Insert at the top
+    liveCrTitleLabel = new QLabel(this);
+    liveCrTitleLabel->setStyleSheet("font-weight: bold; font-size: 16px;");
+    liveCrLayout->insertWidget(0, liveCrTitleLabel); // Insert at the top
+    updateLiveCrTitle(ui->updateIntervalSpinBox->value()); // Set initial text
 
 }
 
@@ -65,7 +69,10 @@ MainWindow::~MainWindow() {
 // In on_runButton_clicked:
 void MainWindow::on_runButton_clicked() {
     qDebug() << "runButton clicked!";
-    clearLiveCrDisplay(); // Clear previous run's labels
+    int updateInterval = ui->updateIntervalSpinBox->value();
+        clearLiveCrDisplay(); // Clear previous run's labels
+    updateLiveCrTitle(ui->updateIntervalSpinBox->value());
+
     QString filename = ui->fileLineEdit->text();
     QString selectedAlgorithm = ui->algorithmComboBox->currentText();
 
@@ -74,86 +81,20 @@ void MainWindow::on_runButton_clicked() {
     bool useAdaptive = ui->adaptiveCheckBox->isChecked();
     int windowSize = ui->windowSizeSpinBox->value();
 
-    // Use a lambda to call runCompression in the worker thread
-    QMetaObject::invokeMethod(runner, [this, filename, windowSize, useAdaptive]() {
-        runner->runCompression(filename.toStdString(), windowSize, useAdaptive);
-        // Optionally emit a signal when done to update summary
+
+    QMetaObject::invokeMethod(runner, [this, filename, windowSize, useAdaptive, updateInterval]() {
+        runner->runCompression(filename.toStdString(), windowSize, useAdaptive, updateInterval);
         emit runner->compressionFinished();
     });
 }
 
-/*
-MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent),
-          ui(std::make_unique<Ui::MainWindow>()),
-          currentAlgorithm("DRH")
-{
-    ui->setupUi(this);
-    ui->windowSizeSpinBox->setMinimum(1);
-
-
-    // Only connect signals that do NOT use the auto-connect slot naming
-    connect(ui->algorithmComboBox, &QComboBox::currentTextChanged,
-            this, &MainWindow::onAlgorithmChanged);
-
-    connect(ui->windowSizeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onWindowSizeChanged);
-
-    // Disable window size spinbox when adaptive is enabled
-    connect(ui->adaptiveCheckBox, &QCheckBox::toggled, ui->windowSizeSpinBox, &QSpinBox::setDisabled);
-
-    // REMOVE all manual connect() calls for runButton, saveCsvButton, visualizeButton, visualizeGraphButton!
-
-    QScrollArea* scrollArea = new QScrollArea(this);
-    QWidget* scrollWidget = new QWidget(scrollArea);
-    liveCrLayout = new QVBoxLayout(scrollWidget); // Initialize liveCrLayout here!
-    scrollWidget->setLayout(liveCrLayout);
-    scrollArea->setWidget(scrollWidget);
-    scrollArea->setWidgetResizable(true);
-
-    // Add to your main UI (assuming you have a centralWidget or a layout)
-    ui->verticalLayout->addWidget(scrollArea); // Or any other main layout
-
-    connect(&runner, &CompressorRunner::crUpdated, this, &MainWindow::updateLiveCrDisplay, Qt::QueuedConnection);
-}
-*/
-
-//MainWindow::~MainWindow() = default; // unique_ptr auto-deletes ui
-
-/*
-void MainWindow::onAlgorithmChanged(const QString &text) {
-    runner.setAlgorithm(text.toStdString());
-}
-*/
 void MainWindow::onAlgorithmChanged(const QString &text) {
     runner->setAlgorithm(text.toStdString());
 }
 
-/*
-
-void MainWindow::on_runButton_clicked() {
-    qDebug() << "runButton clicked!";
-    QString filename = ui->fileLineEdit->text();
-    QString selectedAlgorithm = ui->algorithmComboBox->currentText();
-
-    runner.setAlgorithm(selectedAlgorithm.toStdString());
-
-    bool useAdaptive = ui->adaptiveCheckBox->isChecked();
-    int windowSize = ui->windowSizeSpinBox->value();
-
-    // 2. Run compression
-    runner.runCompression(filename.toStdString(), windowSize, useAdaptive);
-
-    // 3. Update summary text
-    QString summary = QString::fromStdString(runner.getSummaryText());
-    ui->resultsTextEdit->setText(summary);
-    qDebug() << "Running with algorithm:" << selectedAlgorithm;
-}
-
-*/
 void MainWindow::onWindowSizeChanged(int size) {
     // Optional: handle window size changes here (e.g., validation, logging)
 }
-
 
 void MainWindow::on_saveCsvButton_clicked() {
     QString defaultName = QDir::homePath() + "/compression_results.csv";
@@ -206,7 +147,6 @@ void MainWindow::on_visualizeGraphButton_clicked() {
     dialog.exec();
 }
 
-// New slot to handle updates
 void MainWindow::updateLiveCrDisplay(const QString& sensorName, double cr) {
     // Create or update labels for each sensor
     if (!liveCrLayout) return; // Guard against null
@@ -227,4 +167,8 @@ void MainWindow::clearLiveCrDisplay() {
         delete label;
     }
     liveCrLabels.clear();
+}
+
+void MainWindow::updateLiveCrTitle(int interval) {
+    liveCrTitleLabel->setText(QString("Real-Time Compression Ratio (Every %1 Windows)").arg(interval));
 }

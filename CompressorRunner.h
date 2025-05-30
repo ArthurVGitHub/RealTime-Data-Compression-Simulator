@@ -25,7 +25,8 @@ class CompressorRunner: public QObject {
 public:
     CompressorRunner() = default;
     void setAlgorithm(const std::string &algorithmName);
-    void runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize);
+    //void runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize);
+    void runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize, int updateInterval);
     std::map<std::string, SensorStats> getResults() const;
     std::string getSummaryText() const;
     std::map<std::string, std::vector<double>> getOriginalData() const;
@@ -33,6 +34,7 @@ public:
     const std::map<std::string, std::vector<double>> &getCRPerWindow() const;
 
 private:
+    int updateInterval = 1;  // New member variable
     std::string algorithmName;  // <-- keep this private!
     std::map<std::string, SensorStats> results;
     mutable std::mutex resultsMutex;
@@ -43,7 +45,7 @@ private:
     std::map<std::string, std::vector<double>> originalData;
     std::map<std::string, std::vector<double>> decompressedData;
     std::map<std::string, std::vector<double>> crPerWindow;
-
+    std::map<std::string, int> windowCounters;
 signals:
     void crUpdated(const QString& sensorName, double cr);
     void compressionFinished();

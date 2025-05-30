@@ -145,17 +145,21 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     totalOutputBytes += outputBytes;
     double cr = (double)inputBytes / outputBytes;
 
-    emit crUpdated(QString::fromStdString(sensorName), cr);
-
+    windowCounters[sensorName]++;
+    if (windowCounters[sensorName] % updateInterval == 0) {
+        emit crUpdated(QString::fromStdString(sensorName), cr);
+        windowCounters[sensorName] = 0;  // Reset counter
+    }
     crPerWindow[sensorName].push_back(cr);
 }
 
-void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize) {
+void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize, int updateInterval) {
     results.clear();
     originalData.clear();
     decompressedData.clear();
     crPerWindow.clear();
-
+    windowCounters.clear();
+    this->updateInterval = updateInterval;
     auto sensorStreams = EMODnetExtractor::extractSensorsData(filename);
 
     std::vector<std::thread> threads;
@@ -169,7 +173,7 @@ void CompressorRunner::runCompression(const std::string& filename, int windowSiz
         threads.emplace_back(&CompressorRunner::compress_stream, this, sensorName, stream, windowSize, useAdaptiveWindowSize);
     }
     for (auto& t : threads) t.join();
-    emit compressionFinished(); // NEW
+    emit compressionFinished();
 }
 
 
