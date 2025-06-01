@@ -58,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     liveCrLayout->insertWidget(0, liveCrTitleLabel); // Insert at the top
     updateLiveCrTitle(ui->updateIntervalSpinBox->value()); // Set initial text
 
+
 }
 
 MainWindow::~MainWindow() {
@@ -170,5 +171,5 @@ void MainWindow::clearLiveCrDisplay() {
 }
 
 void MainWindow::updateLiveCrTitle(int interval) {
-    liveCrTitleLabel->setText(QString("Real-Time Compression Ratio (Every %1 Windows)").arg(interval));
+    liveCrTitleLabel->setText(QString("Real-Time Compression Ratio (CR) (Every %1 Windows)").arg(interval));
 }

@@ -26,7 +26,7 @@ private slots:
     void on_visualizeGraphButton_clicked();
     void updateLiveCrDisplay(const QString &sensorName, double cr);
 private:
-    int initialWindowSize = 20;
+    int initialWindowSize = 20; // preset adaptive window size
     QLabel* liveCrTitleLabel = nullptr; // Add this
 
     std::unique_ptr<Ui::MainWindow> ui;   // <<-- keep this private!

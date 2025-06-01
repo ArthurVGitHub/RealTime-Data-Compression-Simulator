@@ -15,7 +15,7 @@ struct SensorStats {
     double totalDecodeThroughputMBs;
     double totalEncodeTimeMs;
     double totalDecodeTimeMs;
-    double avgEncodeTimePerSampleUs;   // nieuw veld
+    double avgEncodeTimePerSampleUs;
     double avgDecodeTimePerSampleUs;
     bool valid;
 };
@@ -34,7 +34,7 @@ public:
     const std::map<std::string, std::vector<double>> &getCRPerWindow() const;
 
 private:
-    int updateInterval = 1;  // New member variable
+    int updateInterval = 1;  // update for CR real-time visualization
     std::string algorithmName;  // <-- keep this private!
     std::map<std::string, SensorStats> results;
     mutable std::mutex resultsMutex;

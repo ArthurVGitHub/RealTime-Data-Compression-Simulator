@@ -30,9 +30,9 @@
    <widget class="QTextEdit" name="resultsTextEdit">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>220</x>
       <y>60</y>
-      <width>581</width>
+      <width>571</width>
       <height>261</height>
      </rect>
     </property>
@@ -207,6 +207,9 @@
       <height>16</height>
      </rect>
     </property>
+    <property name="maximum">
+     <number>10000</number>
+    </property>
    </widget>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
@@ -237,9 +240,9 @@
    <widget class="QScrollArea" name="scrollArea">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>220</x>
       <y>330</y>
-      <width>581</width>
+      <width>571</width>
       <height>211</height>
      </rect>
     </property>
@@ -251,7 +254,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>579</width>
+       <width>569</width>
        <height>209</height>
       </rect>
      </property>
@@ -271,8 +274,8 @@
    <widget class="QSpinBox" name="updateIntervalSpinBox">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>220</y>
+      <x>80</x>
+      <y>240</y>
       <width>68</width>
       <height>23</height>
      </rect>
@@ -284,14 +287,27 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>0</x>
       <y>220</y>
-      <width>111</width>
+      <width>221</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Update Interval CR:</string>
+     <string>Update CR visualisation every X windows</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>240</y>
+      <width>21</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>X:</string>
     </property>
    </widget>
   </widget>

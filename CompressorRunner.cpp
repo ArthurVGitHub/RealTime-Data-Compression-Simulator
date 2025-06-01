@@ -31,8 +31,8 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
     if (adaptiveWindowSize) {
         // Adaptive window logic
         const int minWindow = 4;
-        const int maxWindow = 50;
-        const double lowVar = 1e-4;
+        const int maxWindow = 60;
+        const double lowVar = 1e-4; // Below this signal is stable, increase window size
         const double highVar = 1e-2;
         std::deque<double> window;
         std::vector<int> windowSizesUsed;

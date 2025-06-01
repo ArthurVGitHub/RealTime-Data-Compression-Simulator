@@ -3,9 +3,32 @@
 //
 
 #include <cstdint>
+#include <iostream>
 #include "window_optimizer.h"
+int WindowOptimizer::updateWindowSize(
+        const std::vector<double> &window, int currentSize, int minWindow, int maxWindow,
+        double lowVar, double highVar)
+{
+    if (window.empty()) return currentSize;
+    double mean = 0.0;
+    for (double v : window) mean += v;
+    mean /= window.size();
+    double var = 0.0;
+    for (double v : window) var += (v - mean) * (v - mean);
+    var /= window.size();
 
-int WindowOptimizer::updateWindowSize(const std::vector<double> &window, int currentSize, int minWindow, int maxWindow,
+    int newSize = currentSize;
+    if (var < lowVar && currentSize < maxWindow) newSize = currentSize + 1;
+    else if (var > highVar && currentSize > minWindow) newSize = currentSize - 1;
+
+    // Clamp to min/max
+    newSize = std::max(minWindow, std::min(newSize, maxWindow));
+
+    //std::cout << "Window variance: " << var << " | New size: " << newSize << "\n";
+    return newSize;
+}
+
+/*int WindowOptimizer::updateWindowSize(const std::vector<double> &window, int currentSize, int minWindow, int maxWindow,
                                       double lowVar, double highVar) {
     if (window.empty()) return currentSize;
     double mean = 0.0;
@@ -17,8 +40,9 @@ int WindowOptimizer::updateWindowSize(const std::vector<double> &window, int cur
 
     if (var < lowVar && currentSize < maxWindow) return currentSize + 1;
     if (var > highVar && currentSize > minWindow) return currentSize - 1;
+    std::cout << "Window variance: " << var << " | Current size: " << currentSize << "\n";
     return currentSize;
-}
+}*/
 //UNDER TEST:
 /*
 int WindowOptimizer::optimizeWindowSizeForCR(const std::vector<double> &pastWindow, int currentSize, int minWindow,
