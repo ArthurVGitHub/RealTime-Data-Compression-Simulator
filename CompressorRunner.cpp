@@ -153,7 +153,7 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     crPerWindow[sensorName].push_back(cr);
 }
 
-void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize, int updateInterval) {
+/*void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize, int updateInterval) {
     results.clear();
     originalData.clear();
     decompressedData.clear();
@@ -165,6 +165,61 @@ void CompressorRunner::runCompression(const std::string& filename, int windowSiz
     std::vector<std::thread> threads;
     for (const auto& [sensorName, stream] : sensorStreams) {
         originalData[sensorName] = stream; // <-- altijd opslaan!
+        if (stream.size() < windowSize || stream.empty()) {
+            std::cerr << "Skipping sensor '" << sensorName
+                      << "' - stream too small or empty (" << stream.size() << ")\n";
+            continue;
+        }
+        threads.emplace_back(&CompressorRunner::compress_stream, this, sensorName, stream, windowSize, useAdaptiveWindowSize);
+    }
+    for (auto& t : threads) t.join();
+    emit compressionFinished();
+}*/
+
+void CompressorRunner::runCompression(const std::string& filename, int windowSize, bool useAdaptiveWindowSize, int updateInterval) {
+    results.clear();
+    originalData.clear();
+    decompressedData.clear();
+    crPerWindow.clear();
+    windowCounters.clear();
+    dataCharacteristics.clear();
+    this->updateInterval = updateInterval;
+
+    auto sensorStreams = EMODnetExtractor::extractSensorsData(filename);
+
+    // 1. Compute data characteristics for all sensors
+    for (const auto& [sensorName, stream] : sensorStreams) {
+        DataCharacteristics stats;
+        stats.sensorName = sensorName;
+        stats.unit = ""; // Set this if you have units
+        stats.streamSizeBytes = stream.size() * sizeof(double);
+        stats.numSamples = stream.size();
+
+        if (!stream.empty()) {
+            double sum = 0.0;
+            stats.minValue = stream[0];
+            stats.maxValue = stream[0];
+            for (double v : stream) {
+                sum += v;
+                if (v < stats.minValue) stats.minValue = v;
+                if (v > stats.maxValue) stats.maxValue = v;
+            }
+            stats.avgValue = sum / stream.size();
+
+            double variance = 0.0;
+            for (double v : stream) {
+                variance += (v - stats.avgValue) * (v - stats.avgValue);
+            }
+            stats.stdDev = std::sqrt(variance / stream.size());
+            stats.cv = (stats.avgValue != 0) ? (stats.stdDev / stats.avgValue) : 0.0;
+        }
+        dataCharacteristics[sensorName] = stats;
+        originalData[sensorName] = stream; // Also store original data
+    }
+
+    // 2. Start compression threads for valid streams
+    std::vector<std::thread> threads;
+    for (const auto& [sensorName, stream] : sensorStreams) {
         if (stream.size() < windowSize || stream.empty()) {
             std::cerr << "Skipping sensor '" << sensorName
                       << "' - stream too small or empty (" << stream.size() << ")\n";
@@ -201,6 +256,25 @@ std::string CompressorRunner::getSummaryText() const {
     }
     return oss.str();
 }
+
+std::string CompressorRunner::getDataCharacteristicsText() const {
+    std::ostringstream oss;
+    oss << "Sensor (Unit),Stream Size (B),Samples,Avg,Std Dev,CV,Min,Max\n";
+    for (const auto& [sensor, stats] : dataCharacteristics) {
+        double cv = (stats.avgValue != 0) ? (stats.stdDev / stats.avgValue) : 0.0;
+        oss << "\"" << stats.sensorName << " (" << stats.unit << ")\","
+            << stats.streamSizeBytes << ","
+            << stats.numSamples << ","
+            << stats.avgValue << ","
+            << stats.stdDev << ","
+            << cv << ","
+            << stats.minValue << ","
+            << stats.maxValue << "\n";
+    }
+    return oss.str();
+}
+
+
 std::map<std::string, std::vector<double>> CompressorRunner::getOriginalData() const {
     std::lock_guard lock(resultsMutex);
     return originalData;

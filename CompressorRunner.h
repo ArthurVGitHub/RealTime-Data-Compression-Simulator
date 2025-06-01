@@ -7,6 +7,19 @@
 #include "compressor_interface.h"
 #include <QObject> //NEW
 
+struct DataCharacteristics {
+    std::string sensorName;
+    std::string unit; // Add this if you want units
+    size_t streamSizeBytes;
+    size_t numSamples;
+    double avgValue;
+    double stdDev;
+    double cv;
+    double minValue;
+    double maxValue;
+    // Add startTime, endTime if available
+};
+
 struct SensorStats {
     size_t streamSize;
     int windowSize;
@@ -30,6 +43,7 @@ public:
     std::map<std::string, SensorStats> getResults() const;
     std::string getSummaryText() const;
     std::map<std::string, std::vector<double>> getOriginalData() const;
+    std::string getDataCharacteristicsText() const;
     std::map<std::string, std::vector<double>> getDecompressedData() const;
     const std::map<std::string, std::vector<double>> &getCRPerWindow() const;
 
@@ -46,7 +60,10 @@ private:
     std::map<std::string, std::vector<double>> decompressedData;
     std::map<std::string, std::vector<double>> crPerWindow;
     std::map<std::string, int> windowCounters;
+
+    std::map<std::string, DataCharacteristics> dataCharacteristics;
 signals:
     void crUpdated(const QString& sensorName, double cr);
     void compressionFinished();
+
 };

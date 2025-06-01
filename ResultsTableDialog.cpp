@@ -7,7 +7,42 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
-ResultsTableDialog::ResultsTableDialog(const QString& csvData, int windowSize, QWidget *parent)
+#include "ResultsTableDialog.h"
+#include <QVBoxLayout>
+#include <QTextEdit>
+
+ResultsTableDialog::ResultsTableDialog(const QString& dataCharacteristicsCsv,
+                                       const QString& compressionResultsCsv,
+                                       QWidget *parent)
+        : QDialog(parent)
+{
+    setWindowTitle("Data Analysis Results");
+    resize(1100, 700);
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    // Data Characteristics Table
+    QLabel *dataLabel = new QLabel("Data Characteristics", this);
+    dataLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+    layout->addWidget(dataLabel);
+
+    dataTable = new QTableWidget(this);
+    setupTable(dataTable, dataCharacteristicsCsv, false);
+    layout->addWidget(dataTable);
+
+    // Compression Results Table
+    QLabel *compLabel = new QLabel("Compression Results", this);
+    compLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+    layout->addWidget(compLabel);
+
+    compressionTable = new QTableWidget(this);
+    setupTable(compressionTable, compressionResultsCsv, true);
+    layout->addWidget(compressionTable);
+}
+
+
+
+/*ResultsTableDialog::ResultsTableDialog(const QString& csvData, int windowSize, QWidget *parent)
         : QDialog(parent), table(new QTableWidget(this))
 {
     setWindowTitle("Compression Results");
@@ -22,7 +57,8 @@ ResultsTableDialog::ResultsTableDialog(const QString& csvData, int windowSize, Q
     // Setup table
     layout->addWidget(table);
     setupTable(csvData, windowSize);
-}
+}*/
+/*
 
 void ResultsTableDialog::setupTable(const QString& csvData, int windowSize) {
     QStringList lines = csvData.split("\n", Qt::SkipEmptyParts);
@@ -71,4 +107,36 @@ void ResultsTableDialog::setupTable(const QString& csvData, int windowSize) {
                                             .arg(invalidCount), this);
     QVBoxLayout *layout = qobject_cast<QVBoxLayout*>(this->layout());
     if (layout) layout->insertWidget(1, statsLabel);
+}
+*/
+void ResultsTableDialog::setupTable(QTableWidget* table, const QString& csvData, bool highlightValid) {
+    QStringList lines = csvData.split("\n", Qt::SkipEmptyParts);
+    if (lines.isEmpty()) return;
+
+    QStringList headers = lines[0].split(",");
+    table->setColumnCount(headers.size());
+    table->setHorizontalHeaderLabels(headers);
+    table->setRowCount(lines.size() - 1);
+
+    for (int i = 1; i < lines.size(); ++i) {
+        QStringList fields = lines[i].split(",");
+        for (int j = 0; j < fields.size(); ++j) {
+            QTableWidgetItem *item = new QTableWidgetItem(fields[j]);
+            table->setItem(i-1, j, item);
+        }
+        // Optional: highlight invalid rows in compression results
+        if (highlightValid) {
+            int validCol = headers.indexOf("Valid");
+            if (validCol >= 0) {
+                QTableWidgetItem *validItem = table->item(i-1, validCol);
+                if (validItem && validItem->text().toLower() != "true") {
+                    validItem->setBackground(Qt::red);
+                    validItem->setForeground(Qt::white);
+                }
+            }
+        }
+    }
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    table->setAlternatingRowColors(true);
+    table->setStyleSheet("QTableWidget { font: 10pt; }");
 }

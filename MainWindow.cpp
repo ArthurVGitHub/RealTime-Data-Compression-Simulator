@@ -98,6 +98,11 @@ void MainWindow::onWindowSizeChanged(int size) {
 }
 
 void MainWindow::on_saveCsvButton_clicked() {
+    if (runner->getResults().empty()) {
+        QMessageBox::information(this, "No Data", "Run compression first to see results.");
+        return;
+    }
+
     QString defaultName = QDir::homePath() + "/compression_results.csv";
     QString fileName = QFileDialog::getSaveFileName(
             this,
@@ -115,8 +120,12 @@ void MainWindow::on_saveCsvButton_clicked() {
         return;
     }
 
+    QString dataCharacteristicsCsv = QString::fromStdString(runner->getDataCharacteristicsText());
+    QString compressionResultsCsv = QString::fromStdString(runner->getSummaryText());
+    QString combinedCsv = dataCharacteristicsCsv + "\n\n" + compressionResultsCsv;
+
     QTextStream out(&file);
-    out << QString::fromStdString(runner->getSummaryText());
+    out << combinedCsv;
 
     file.close();
     QMessageBox::information(this, "Saved", "Results saved to:\n" + fileName);
@@ -129,10 +138,25 @@ void MainWindow::on_visualizeButton_clicked() {
         return;
     }
 
+    // Generate both CSV texts
+    QString dataCharacteristicsCsv = QString::fromStdString(runner->getDataCharacteristicsText());
+    QString compressionResultsCsv = QString::fromStdString(runner->getSummaryText());
+
+    // Pass both to the dialog
+    ResultsTableDialog dialog(dataCharacteristicsCsv, compressionResultsCsv, this);
+    dialog.exec();
+}
+
+/*void MainWindow::on_visualizeButton_clicked() {
+    if (runner->getResults().empty()) {
+        QMessageBox::information(this, "No Data", "Run compression first to see results.");
+        return;
+    }
+
     QString csvData = QString::fromStdString(runner->getSummaryText());
     ResultsTableDialog dialog(csvData, initialWindowSize, this);
     dialog.exec(); // Modal, blocks until closed
-}
+}*/
 
 void MainWindow::on_visualizeGraphButton_clicked() {
     if (runner->getResults().empty()) {
