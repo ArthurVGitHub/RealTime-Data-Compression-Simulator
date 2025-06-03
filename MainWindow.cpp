@@ -36,11 +36,15 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect CR updates (queued is automatic when objects are in different threads)
     connect(runner, &CompressorRunner::crUpdated, this, &MainWindow::updateLiveCrDisplay);
 
+//    connect(runner, &CompressorRunner::compressionFinished, this, [this]() {
+//        QString summary = QString::fromStdString(runner->getSummaryText());
+//        ui->resultsTextEdit->setText(summary);
+//    });
     connect(runner, &CompressorRunner::compressionFinished, this, [this]() {
         QString summary = QString::fromStdString(runner->getSummaryText());
         ui->resultsTextEdit->setText(summary);
+        runFinishedLabel->setText("Run finished!"); // <-- Update the label
     });
-
     connect(ui->updateIntervalSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &MainWindow::updateLiveCrTitle);
 
@@ -58,7 +62,11 @@ MainWindow::MainWindow(QWidget *parent)
     liveCrLayout->insertWidget(0, liveCrTitleLabel); // Insert at the top
     updateLiveCrTitle(ui->updateIntervalSpinBox->value()); // Set initial text
 
-
+    runFinishedLabel = new QLabel(this);
+    runFinishedLabel->setAlignment(Qt::AlignCenter);
+    runFinishedLabel->setStyleSheet("font-weight: bold; color: green;");
+    ui->verticalLayout->addWidget(runFinishedLabel);
+    runFinishedLabel->clear();
 }
 
 MainWindow::~MainWindow() {
@@ -69,6 +77,7 @@ MainWindow::~MainWindow() {
 
 // In on_runButton_clicked:
 void MainWindow::on_runButton_clicked() {
+    runFinishedLabel->clear();
     qDebug() << "runButton clicked!";
     int updateInterval = ui->updateIntervalSpinBox->value();
     clearLiveCrDisplay(); // Clear previous run's labels
@@ -83,10 +92,15 @@ void MainWindow::on_runButton_clicked() {
     int windowSize = ui->windowSizeSpinBox->value();
 
 
+//    QMetaObject::invokeMethod(runner, [this, filename, windowSize, useAdaptive, updateInterval]() {
+//        runner->runCompression(filename.toStdString(), windowSize, useAdaptive, updateInterval);
+//        emit runner->compressionFinished();
+//    });
     QMetaObject::invokeMethod(runner, [this, filename, windowSize, useAdaptive, updateInterval]() {
         runner->runCompression(filename.toStdString(), windowSize, useAdaptive, updateInterval);
         emit runner->compressionFinished();
     });
+
 }
 
 void MainWindow::onAlgorithmChanged(const QString &text) {

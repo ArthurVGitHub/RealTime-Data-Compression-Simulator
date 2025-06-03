@@ -7,6 +7,7 @@
 #include <QLabel>
 #include "CompressorRunner.h"
 #include <QThread>
+#include <QProgressBar>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -42,6 +43,7 @@ private:
     void clearLiveCrDisplay();
 
     void updateLiveCrTitle(int interval);
+    QLabel* runFinishedLabel = nullptr;
 };
 
 #endif // MAINWINDOW_H
