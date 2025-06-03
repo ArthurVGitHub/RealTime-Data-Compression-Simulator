@@ -16,13 +16,9 @@ int WindowOptimizer::updateWindowSize(
     double var = 0.0;
     for (double v : window) var += (v - mean) * (v - mean);
     var /= window.size();
-
     int newSize = currentSize;
     if (var < lowVar && currentSize < maxWindow) newSize = currentSize + 1;
     else if (var > highVar && currentSize > minWindow) newSize = currentSize - 1;
-
-    // Clamp to min/max
-    newSize = std::max(minWindow, std::min(newSize, maxWindow));
 
     //std::cout << "Window variance: " << var << " | New size: " << newSize << "\n";
     return newSize;

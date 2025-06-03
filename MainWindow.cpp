@@ -71,7 +71,7 @@ MainWindow::~MainWindow() {
 void MainWindow::on_runButton_clicked() {
     qDebug() << "runButton clicked!";
     int updateInterval = ui->updateIntervalSpinBox->value();
-        clearLiveCrDisplay(); // Clear previous run's labels
+    clearLiveCrDisplay(); // Clear previous run's labels
     updateLiveCrTitle(ui->updateIntervalSpinBox->value());
 
     QString filename = ui->fileLineEdit->text();

@@ -10,8 +10,8 @@
 
 class WindowOptimizer {
 public:
-        static int updateWindowSize(const std::vector<double>& window, int currentSize, int minWindow, int maxWindow, double lowVar, double highVar);
-        static int optimizeWindowSizeForCR(const std::vector<double>& pastWindow, int currentSize, int minWindow, int maxWindow, CompressorInterface* compressor);
+    static int updateWindowSize(const std::vector<double>& window, int currentSize, int minWindow, int maxWindow, double lowVar, double highVar);
+    //static int optimizeWindowSizeForCR(const std::vector<double>& pastWindow, int currentSize, int minWindow, int maxWindow, CompressorInterface* compressor);
 };
 
 #endif //THESIS_WINDOW_OPTIMIZER_H

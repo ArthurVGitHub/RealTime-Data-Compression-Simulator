@@ -34,7 +34,7 @@ struct SensorStats {
 };
 
 class CompressorRunner: public QObject {
-    Q_OBJECT
+Q_OBJECT
 public:
     CompressorRunner() = default;
     void setAlgorithm(const std::string &algorithmName);

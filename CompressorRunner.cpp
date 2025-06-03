@@ -30,7 +30,7 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
 
     if (adaptiveWindowSize) {
         // Adaptive window logic
-        const int minWindow = 4;
+        const int minWindow = 2;
         const int maxWindow = 60;
         const double lowVar = 1e-4; // Below this signal is stable, increase window size
         const double highVar = 1e-2;
@@ -134,7 +134,7 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
         allDecoded.insert(allDecoded.end(), decoded.begin(), decoded.end());
     }
 
-        // Update metrics
+    // Update metrics
     size_t inputBytes = currentWindow.size() * sizeof(double);
     size_t outputBytes = 0;
     for (const auto& s : encoded) outputBytes += s.size();
@@ -252,7 +252,7 @@ std::string CompressorRunner::getSummaryText() const {
             << stats.totalDecodeTimeMs << ","
             << stats.avgEncodeTimePerSampleUs << ","
             << stats.avgDecodeTimePerSampleUs << ","
-        << (stats.valid ? "true" : "false") << "\n";
+            << (stats.valid ? "true" : "false") << "\n";
     }
     return oss.str();
 }
