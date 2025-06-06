@@ -33,7 +33,8 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
         const int minWindow = 2;
         const int maxWindow = 60;
         const double lowVar = 1e-4; // Below this signal is stable, increase window size
-        const double highVar = 1e-2;
+        const double highVar = 1e-2; // WAS 1e-2
+        const double maxSlopeVar = 1e-2;
         std::deque<double> window;
         std::vector<int> windowSizesUsed;
 
@@ -46,8 +47,8 @@ void CompressorRunner::compress_stream(const std::string& sensorName, const std:
                 windowSizesUsed.push_back(windowSize);
 
                 // Update window size
-                int newWindowSize = WindowOptimizer::updateWindowSize(currentWindow, windowSize,
-                                                                      minWindow, maxWindow, lowVar, highVar);
+                int newWindowSize = WindowOptimizer::updateWindowSizeSLOPE(currentWindow, windowSize,
+                                                                      minWindow, maxWindow, lowVar, highVar, maxSlopeVar); //add maxSlopeVar for SLOPE
                 if (newWindowSize < windowSize && window.size() > newWindowSize) window.pop_front();
                 windowSize = newWindowSize;
 
