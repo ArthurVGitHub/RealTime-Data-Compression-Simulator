@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <numeric>
+#include <valarray>
 #include "window_optimizer.h"
 int WindowOptimizer::updateWindowSize(
         const std::vector<double> &window, int currentSize, int minWindow, int maxWindow,
@@ -55,8 +56,43 @@ int WindowOptimizer::updateWindowSizeCV(
     return newSize;
 
 }
-
 int WindowOptimizer::updateWindowSizeSLOPE(
+        const std::vector<double>& window, int currentSize, int minWindow, int maxWindow,
+        double lowCV, double highCV, double maxSlopeVar = 0.1)
+{
+    if (window.empty()) return currentSize;
+
+    double mean = 0.0;
+    for (double v : window) mean += v;
+    mean /= window.size();
+    double var = 0.0;
+    for (double v : window) var += (v - mean) * (v - mean);
+    var /= window.size();
+    double stddev = std::sqrt(var);
+    double cv = (mean != 0.0) ? stddev / std::abs(mean) : 0.0;
+
+    std::vector<double> diffs;
+    for (size_t i = 1; i < window.size(); ++i)
+        diffs.push_back(window[i] - window[i-1]);
+    double slopeVar = 0.0;
+    if (!diffs.empty()) {
+        double avgDiff = std::accumulate(diffs.begin(), diffs.end(), 0.0) / diffs.size();
+        for (double d : diffs) slopeVar += (d - avgDiff) * (d - avgDiff);
+        slopeVar /= diffs.size();
+    }
+
+    int newSize = currentSize;
+    if (slopeVar < maxSlopeVar) {
+        if (currentSize < maxWindow) newSize = currentSize + 1;
+    } else {
+        if (cv < lowCV && currentSize < maxWindow) newSize = currentSize + 1;
+        else if (cv > highCV && currentSize > minWindow) newSize = currentSize - 1;
+    }
+    return newSize;
+}
+
+/*
+int WindowOptimizer::updateWindowSizeNstdDevSlope(
         const std::vector<double>& window, int currentSize, int minWindow, int maxWindow,
         double lowVar, double highVar, double maxSlopeVar = 0.1) // New parameter
 {
@@ -96,6 +132,7 @@ int WindowOptimizer::updateWindowSizeSLOPE(
 
     return newSize;
 }
+*/
 
 
 
