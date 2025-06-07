@@ -7,6 +7,7 @@
 #include <map>
 #include <queue>
 #include <cstdint>
+#include <set>
 #include "compressor_interface.h"
 
 // Huffman coding implementation adapted from https://github.com/steve-arnold/HuffmanCpp
@@ -51,6 +52,7 @@ public:
     uintmax_t GetTotalCodedBits();
 
 private:
+    std::set<unsigned char> unique_bytes;
     void MapSymbol(char);
     void MakeCodesFromTree();
     void MakePrefixCodes(TreeNode*, std::string);

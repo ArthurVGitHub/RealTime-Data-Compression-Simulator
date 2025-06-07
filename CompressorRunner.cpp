@@ -116,7 +116,11 @@ void CompressorRunner::processWindow(const std::vector<double>& currentWindow,
     auto startEncode = std::chrono::high_resolution_clock::now();
     encoded = compressor->encode(currentWindow);
     auto endEncode = std::chrono::high_resolution_clock::now();
-
+    if (encoded.empty()) {
+        std::cerr << "CompressorRunner: Encoding skipped for sensor '" << sensorName
+                  << "' (window size: " << currentWindow.size() << ")\n";
+        return;  // Do not proceed with decode or metrics
+    }
     // Decode
     auto startDecode = std::chrono::high_resolution_clock::now();
     decoded = compressor->decode(encoded);

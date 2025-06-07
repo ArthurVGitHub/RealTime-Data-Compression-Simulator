@@ -21,13 +21,29 @@ Huffman::Huffman()
 }
 
 // --- In-Memory Encode/Decode for CompressorInterface ---
-
 std::vector<std::string> Huffman::encode(const std::vector<double>& data) {
+    if (data.empty()) {
+        std::cerr << "Huffman: Input data vector is empty, skipping.\n";
+        return {};
+    }
+    std::string input(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(double));
+    std::set<unsigned char> unique_bytes(input.begin(), input.end());
+    if (unique_bytes.size() < 2) {
+        std::cerr << "Huffman: Input has fewer than 2 unique bytes, skipping.\n";
+        return {};
+    }
+    std::string compressed = compress(input);
+    return {compressed};
+}
+
+
+
+/*std::vector<std::string> Huffman::encode(const std::vector<double>& data) {
     // Convert double vector to byte string
     std::string input(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(double));
     std::string compressed = compress(input);
     return {compressed};
-}
+}*/
 
 std::vector<double> Huffman::decode(const std::vector<std::string>& encodedValues) {
     if (encodedValues.empty()) return {};
