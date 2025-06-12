@@ -47,18 +47,18 @@ SensorPlotDialog::SensorPlotDialog(
             }
         }
 
-// 2. Originele data
+// 2. Original data
         plot->addGraph();
         plot->graph(0)->setData(x, yOrig);
         plot->graph(0)->setPen(QPen(Qt::blue));
-        plot->graph(0)->setName("Originel (" + QString::fromStdString(sensor) + ")");
+        plot->graph(0)->setName("Original (" + QString::fromStdString(sensor) + ")");
 
 
-// 3. Gedecomprimeerde data
+// 3. Decompressed data
         plot->addGraph();
         plot->graph(1)->setData(x, yDecomp);
         plot->graph(1)->setPen(QPen(Qt::green));
-        plot->graph(1)->setName("Decompressede (" + QString::fromStdString(sensor) + ")");
+        plot->graph(1)->setName("Decompressed (" + QString::fromStdString(sensor) + ")");
 
 // 4. CR-curve (optioneel schalen als de schaal heel anders is)
         plot->addGraph();
@@ -72,7 +72,7 @@ SensorPlotDialog::SensorPlotDialog(
         plot->legend->setVisible(true);
         plot->rescaleAxes();
         plot->plotLayout()->insertRow(0);
-        plot->plotLayout()->addElement(0, 0, new QCPTextElement(plot, "Originel, decompressed en CR", QFont("sans", 10, QFont::Bold)));
+        plot->plotLayout()->addElement(0, 0, new QCPTextElement(plot, "Original, decompressed and CR", QFont("sans", 10, QFont::Bold)));
         plot->setMinimumHeight(250);
 
 // Voeg toe aan je layout
