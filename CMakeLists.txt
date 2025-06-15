@@ -30,6 +30,9 @@ add_executable(
         MainWindow.cpp
         MainWindow.h
         MainWindow.ui
+        exportwindow.cpp
+        exportwindow.h
+        exportwindow.cpp
         CompressorRunner.cpp
         CompressorRunner.h
         delta.cpp

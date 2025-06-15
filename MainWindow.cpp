@@ -8,6 +8,7 @@
 #include "ResultsTableDialog.h"
 #include "SensorPlotDialog.h"
 #include <QVBoxLayout>
+#include "exportwindow.h"
 #include "graphLib/QCustomPlot.h"
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent),
@@ -210,4 +211,10 @@ void MainWindow::clearLiveCrDisplay() {
 
 void MainWindow::updateLiveCrTitle(int interval) {
     liveCrTitleLabel->setText(QString("Real-Time Compression Ratio (CR) (Every %1 Windows)").arg(interval));
+}
+
+void MainWindow::on_exportEmodnetButton_clicked() {
+    exportWindow* ew = new exportWindow(this);
+    ew->setDecompressedData(runner->getDecompressedData());
+    ew->show();
 }

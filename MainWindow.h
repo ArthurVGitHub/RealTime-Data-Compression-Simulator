@@ -20,6 +20,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_exportEmodnetButton_clicked();
     void on_saveCsvButton_clicked();
     void on_runButton_clicked();
     void onAlgorithmChanged(const QString &text);
