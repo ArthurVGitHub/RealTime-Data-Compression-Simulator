@@ -145,7 +145,58 @@ namespace {
     }
 
     // Helper: Decide if a column is metadata or QV
+/*    bool is_metadata_column(const std::string& colname, bool is_csv) {
+        static const std::set<std::string> txt_meta_keywords = {
+                "cruise", "station", "type", "date", "time",
+                "longitude", "latitude", "local_cdi_id", "edmo_code", "bot. depth"
+        };
+
+        std::string lower = toLower(trim(colname));
+
+        // Skip QV columns
+        if (lower.find("qv:") == 0) return true;
+
+        // Exact match for metadata keywords (non-CSV)
+        if (!is_csv) {
+            return txt_meta_keywords.count(lower) > 0; // Exact match, not substring
+        }
+
+    }*/
+
     bool is_metadata_column(const std::string& colname, bool is_csv) {
+        static const std::set<std::string> txt_meta_keywords = {
+                "cruise", "station", "type", "date", "time",
+                "longitude", "latitude", "local_cdi_id", "edmo_code", "bot. depth"
+        };
+
+        std::string lower = toLower(trim(colname));
+        if (lower.find("qv:") == 0) return true;
+
+        // Partial match for metadata keywords (non-CSV)
+        if (!is_csv) {
+            for (const auto& kw : txt_meta_keywords) {
+                if (lower.find(kw) != std::string::npos) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+
+        // Skip QV columns
+//        if (lower.find("qv:") == 0) return true;
+//
+//        // Exact match for metadata keywords (non-CSV)
+//        if (!is_csv) {
+//            return txt_meta_keywords.count(lower) > 0;
+//        }
+//
+//        // For CSV: by default, treat all columns as non-metadata (unless you want to add logic here)
+//        return false;
+    }
+
+
+/*    bool is_metadata_column(const std::string& colname, bool is_csv) {
         static const std::set<std::string> txt_meta_keywords = {
                 "cruise", "station", "type", "date", "time", "longitude", "latitude",
                 "local_cdi_id", "edmo_code", "bot. depth"
@@ -171,19 +222,10 @@ namespace {
                     return true;
             return false;
         }
-    }
+    }*/
 }
 
-
 std::map<std::string, std::vector<double>> EMODnetExtractor::extractSensorsData(const std::string& filename) {
-    // For CSV, specify which sensors you want (normalized)
-    static const std::set<std::string> sensorsToKeepRaw = {
-            "conductivity", "depth", "local_density", "pressure",
-            "salinity", "sound_velocity", "specific_conductivity", "temperature"
-    };
-    std::set<std::string> sensorsToKeep;
-    for (const auto& s : sensorsToKeepRaw) sensorsToKeep.insert(toLower(trim(s)));
-
     std::map<std::string, std::vector<double>> sensors;
     std::ifstream file(filename);
     if (!file.is_open()) return {};
@@ -210,14 +252,24 @@ std::map<std::string, std::vector<double>> EMODnetExtractor::extractSensorsData(
     bool is_csv = std::any_of(headers.begin(), headers.end(),
                               [](const std::string& h) { return h.find("field.") == 0; });
 
+    // (optioneel) Specificeer sensoren voor CSV
+    static const std::set<std::string> sensorsToKeepRaw = {
+            "conductivity", "depth", "local_density", "pressure",
+            "salinity", "sound_velocity", "specific_conductivity", "temperature", "cndcst01"
+    };
+    std::set<std::string> sensorsToKeep;
+    for (const auto& s : sensorsToKeepRaw) sensorsToKeep.insert(toLower(trim(s)));
+
     // Find sensor columns
     std::vector<size_t> sensorCols;
     std::vector<std::string> sensorNames;
     for (size_t i = 0; i < headers.size(); ++i) {
         std::string header = headers[i];
         if (is_csv) {
+            // Strip "field." indien aanwezig
             std::string cleanName = toLower(trim(header.substr(header.find("field.") == 0 ? 6 : 0)));
-            if (!is_metadata_column(header, true) && sensorsToKeep.count(cleanName)) {
+            // Gebruik eventueel een whitelist:
+            if (sensorsToKeep.empty() || sensorsToKeep.count(cleanName)) {
                 sensorCols.push_back(i);
                 sensorNames.push_back(cleanName);
                 std::cout << "Extracting CSV sensor: '" << cleanName << "' (original: '" << header << "')\n";
@@ -261,3 +313,167 @@ std::map<std::string, std::vector<double>> EMODnetExtractor::extractSensorsData(
 
     return sensors;
 }
+
+// worked but CSV not
+/*std::map<std::string, std::vector<double>> EMODnetExtractor::extractSensorsData(const std::string& filename) {
+    std::map<std::string, std::vector<double>> sensors;
+    std::ifstream file(filename);
+    if (!file.is_open()) return {};
+
+    // Read first line to detect delimiter and headers
+    std::string firstLine;
+    while (std::getline(file, firstLine)) {
+        if (!firstLine.empty() && firstLine[0] != '/') break;
+    }
+    if (firstLine.empty()) {
+        std::cerr << "No data lines found in file." << std::endl;
+        return {};
+    }
+    char delim = detectDelimiter(firstLine);
+
+    // Parse headers
+    std::vector<std::string> headers = splitLine(firstLine, delim);
+    if (headers.empty()) {
+        std::cerr << "No headers found in file." << std::endl;
+        return {};
+    }
+
+    // Detect if CSV (any header starts with "field.")
+    bool is_csv = std::any_of(headers.begin(), headers.end(),
+                              [](const std::string& h) { return h.find("field.") == 0; });
+
+    // Find sensor columns
+    std::vector<size_t> sensorCols;
+    std::vector<std::string> sensorNames;
+    for (size_t i = 0; i < headers.size(); ++i) {
+        std::string header = headers[i];
+        if (!is_metadata_column(header, is_csv)) {
+            sensorCols.push_back(i);
+            sensorNames.push_back(toLower(trim(header)));
+            std::cout << "Extracting sensor: '" << header << "'\n";
+        }
+    }
+
+    if (sensorCols.empty()) {
+        std::cerr << "No matching sensor columns found in file." << std::endl;
+        return {};
+    }
+
+    // Parse data rows
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '/') continue;
+        auto cols = splitLine(line, delim);
+        for (size_t j = 0; j < sensorCols.size(); ++j) {
+            size_t idx = sensorCols[j];
+            if (idx < cols.size()) {
+                std::string val = cols[idx];
+                if (isNumeric(val)) {
+                    sensors[sensorNames[j]].push_back(std::stod(val));
+                }
+            }
+        }
+    }
+
+    for (const auto& [name, vec] : sensors) {
+        std::cout << "Sensor: " << name << " (first 5 values): ";
+        for (size_t i = 0; i < std::min<size_t>(5, vec.size()); ++i)
+            std::cout << vec[i] << " ";
+        std::cout << "\n";
+    }
+
+    return sensors;
+}*/
+
+//LAST WORKING 100%
+/*
+std::map<std::string, std::vector<double>> EMODnetExtractor::extractSensorsData(const std::string& filename) {
+    // For CSV, specify which sensors you want (normalized)
+    static const std::set<std::string> sensorsToKeepRaw = {
+            "conductivity", "depth", "local_density", "pressure",
+            "salinity", "sound_velocity", "specific_conductivity", "temperature", "cndcst01"
+    };
+    std::set<std::string> sensorsToKeep;
+    for (const auto& s : sensorsToKeepRaw) sensorsToKeep.insert(toLower(trim(s)));
+
+    std::map<std::string, std::vector<double>> sensors;
+    std::ifstream file(filename);
+    if (!file.is_open()) return {};
+
+    // Read first line to detect delimiter and headers
+    std::string firstLine;
+    while (std::getline(file, firstLine)) {
+        if (!firstLine.empty() && firstLine[0] != '/') break;
+    }
+    if (firstLine.empty()) {
+        std::cerr << "No data lines found in file." << std::endl;
+        return {};
+    }
+    char delim = detectDelimiter(firstLine);
+
+    // Parse headers
+    std::vector<std::string> headers = splitLine(firstLine, delim);
+    if (headers.empty()) {
+        std::cerr << "No headers found in file." << std::endl;
+        return {};
+    }
+
+    // Detect if CSV (any header starts with "field.")
+    bool is_csv = std::any_of(headers.begin(), headers.end(),
+                              [](const std::string& h) { return h.find("field.") == 0; });
+
+    // Find sensor columns
+    std::vector<size_t> sensorCols;
+    std::vector<std::string> sensorNames;
+    for (size_t i = 0; i < headers.size(); ++i) {
+        std::string header = headers[i];
+        if (is_csv) {
+            std::string cleanName = toLower(trim(header.substr(header.find("field.") == 0 ? 6 : 0)));
+            //if (!is_metadata_column(header, true) && sensorsToKeep.count(cleanName)) {
+            if (!is_metadata_column(header, true)) {
+                sensorCols.push_back(i);
+                sensorNames.push_back(cleanName);
+                std::cout << "Extracting CSV sensor: '" << cleanName << "' (original: '" << header << "')\n";
+            }
+        } else {
+            std::cout << "Checking column '" << header << "': is_metadata="
+                      << is_metadata_column(header, false) << std::endl;
+
+            if (!is_metadata_column(header, false)) {
+                sensorCols.push_back(i);
+                sensorNames.push_back(toLower(trim(header)));
+                std::cout << "Extracting TXT sensor: '" << header << "'\n";
+            }
+        }
+    }
+
+    if (sensorCols.empty()) {
+        std::cerr << "No matching sensor columns found in file." << std::endl;
+        return {};
+    }
+
+    // Parse data rows
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '/') continue;
+        auto cols = splitLine(line, delim);
+        for (size_t j = 0; j < sensorCols.size(); ++j) {
+            size_t idx = sensorCols[j];
+            if (idx < cols.size()) {
+                std::string val = cols[idx];
+                if (isNumeric(val)) {
+                    sensors[sensorNames[j]].push_back(std::stod(val));
+                }
+            }
+        }
+    }
+
+    for (const auto& [name, vec] : sensors) {
+        std::cout << "Sensor: " << name << " (first 5 values): ";
+        for (size_t i = 0; i < std::min<size_t>(5, vec.size()); ++i)
+            std::cout << vec[i] << " ";
+        std::cout << "\n";
+    }
+
+    return sensors;
+}*/

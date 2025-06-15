@@ -47,7 +47,7 @@ SensorPlotDialog::SensorPlotDialog(
             }
         }
 
-// 2. Original data
+/*// 2. Original data
         plot->addGraph();
         plot->graph(0)->setData(x, yOrig);
         plot->graph(0)->setPen(QPen(Qt::blue));
@@ -73,7 +73,41 @@ SensorPlotDialog::SensorPlotDialog(
         plot->rescaleAxes();
         plot->plotLayout()->insertRow(0);
         plot->plotLayout()->addElement(0, 0, new QCPTextElement(plot, "Original, decompressed and CR", QFont("sans", 10, QFont::Bold)));
+        plot->setMinimumHeight(250);*/
+// Enable right y-axis
+        plot->yAxis2->setVisible(true);
+        plot->yAxis->setLabel("CR");
+        plot->yAxis2->setLabel("Sensor Value");
+
+// Original data (right y-axis)
+        plot->addGraph(plot->xAxis, plot->yAxis2);
+        plot->graph(0)->setData(x, yOrig);
+        plot->graph(0)->setPen(QPen(Qt::blue));
+        plot->graph(0)->setName("Original (" + QString::fromStdString(sensor) + ")");
+
+// Decompressed data (right y-axis)
+        plot->addGraph(plot->xAxis, plot->yAxis2);
+        plot->graph(1)->setData(x, yDecomp);
+        plot->graph(1)->setPen(QPen(Qt::green));
+        plot->graph(1)->setName("Decompressed (" + QString::fromStdString(sensor) + ")");
+
+// CR curve (left y-axis)
+        plot->addGraph(); // attaches to xAxis, yAxis by default
+        plot->graph(2)->setData(x, yCR);
+        plot->graph(2)->setPen(QPen(Qt::darkMagenta, 2, Qt::DashLine));
+        plot->graph(2)->setName("CR");
+
+// Labels, legend, etc.
+        plot->xAxis->setLabel("Sample index");
+        plot->legend->setVisible(true);
+        plot->plotLayout()->insertRow(0);
+        plot->plotLayout()->addElement(0, 0, new QCPTextElement(plot, "Original, decompressed and CR", QFont("sans", 10, QFont::Bold)));
         plot->setMinimumHeight(250);
+
+// Rescale axes
+        plot->yAxis->rescale(true);   // CR axis (left)
+        plot->yAxis2->rescale(true);  // Value axis (right)
+        plot->xAxis->rescale(true);
 
 // Voeg toe aan je layout
         sensorLayout->addWidget(plot);
